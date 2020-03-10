@@ -2,7 +2,7 @@ package waveengine.ecs.system;
 
 import waveengine.Discriminator;
 import waveengine.core.WaveEngineRunning;
-import waveengine.ecs.component.AutomaticComponentContainer;
+import waveengine.ecs.component.ManagedTableGroup;
 import waveengine.ecs.component.TableGroup;
 import waveengine.guiimplementation.Interactions;
 
@@ -11,7 +11,7 @@ import java.util.List;
 
 public abstract class WaveSystemBase {
     private WaveEngineRunning waveEngineRunning;
-    private List<AutomaticComponentContainer> resourcesHeld = new ArrayList<>();
+    private List<ManagedTableGroup> resourcesHeld = new ArrayList<>();
 
     protected WaveEngineRunning getWaveEngineRunning() {
         return waveEngineRunning;
@@ -23,8 +23,8 @@ public abstract class WaveSystemBase {
         return this;
     }
 
-    protected AutomaticComponentContainer getTablesFor(Discriminator... components) {
-        var comp = getWaveEngineRunning().getComponentManager().getComponentsFor(components);
+    protected ManagedTableGroup getTablesFor(Discriminator... components) {
+        var comp = getWaveEngineRunning().getComponentManager().getTables(components);
         resourcesHeld.add(comp);
         return comp;
     }
@@ -34,6 +34,10 @@ public abstract class WaveSystemBase {
         return comp.getTable(component);
     }
 
+    /**
+     * Method that can be used to free resources acquired through getTablesFor method,
+     * before finishing the current iteration - useful if you
+     */
     protected void freeComponents() {
         for (var comp : resourcesHeld) {
             comp.close();

@@ -23,6 +23,14 @@ public class Clickable {
         this.onButtonPressed = onButtonPressed;
     }
 
+    public Clickable(boolean fromCenter, int x, int y, int width, int height, Runnable onButtonPressed) {
+        this(x, y, width, height, onButtonPressed);
+        if (fromCenter) {
+            x -= width/2;
+            y -= height/2;
+        }
+    }
+
     public boolean isInButton(int xPos, int yPos) {
         return xPos >= x && x <= xPos + width && yPos >= y && y <= yPos + height;
     }
@@ -59,6 +67,5 @@ public class Clickable {
         var entity = Entity.getEntityActiveOnOneStage(activeStage);
         var manager = waveEngine.getComponentManager();
 
-        manager.addEntityToComponent(entity, );
     }
 }

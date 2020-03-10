@@ -20,8 +20,8 @@ public class ComponentContainerImpl implements TableGroup {
 
 
     @Override
-    public Table getTable(Discriminator component) {
-        return map.get(component);
+    public Table getTable(Discriminator table) {
+        return map.get(table);
     }
 
 

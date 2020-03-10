@@ -14,11 +14,11 @@ import java.util.concurrent.Semaphore;
 public class ComponentManager {
 
     private Discriminator activeStage;
+
     private Map<Discriminator, HashMap<Integer, Object>> objectsPerComponent = new HashMap<>();
     private Map<Discriminator, HashMap<Integer, Object>> activeObjectsPerComponent = new HashMap<>();
     private Map<List<Discriminator>, TableGroup> activeObjectsPerComponents = new HashMap<>();
     private List<Entity> entityList = new ArrayList<>();
-    private List<Entity> activeEntityList = new ArrayList<>();
     private Set<Discriminator> components = new HashSet<>();
 
 
@@ -44,16 +44,21 @@ public class ComponentManager {
     private Semaphore modificationSemaphore = new Semaphore(1);
     private Map<Discriminator, Semaphore> discriminatorSemaphoreMap = new ConcurrentHashMap<>();
 
-    public AutomaticComponentContainer getComponentsFor(Discriminator... components) {
-        var compList = Arrays.asList(components);
+    /**
+     * Method that locks given tables, and returns combination of those tables as ManagedTableGroup object.
+     * @param selectedTables tables that are required.
+     * @return ManagedTableGroup object with required tables.
+     */
+    public ManagedTableGroup getTables(Discriminator... selectedTables) {
+        var compList = Arrays.asList(selectedTables);
         acquireLockOn(compList);
-        var x = getComponentForSystems(compList);
-        return new AutomaticComponentContainer(
-                x,
+        var tables = lazyGetTables(compList);
+        return new ManagedTableGroup(
+                tables,
                 () -> releaseLockOn(compList));
     }
 
-    private TableGroup getComponentForSystems(List<Discriminator> components) {
+    private TableGroup lazyGetTables(List<Discriminator> components) {
         modificationSemaphore.acquireUninterruptibly();
 
         if (activeObjectsPerComponents.containsKey(components)) {
@@ -63,7 +68,6 @@ public class ComponentManager {
         }
 
         if (needsToRebuildList) {
-            rebuildEntityList();
             rebuildActiveObjectsPerComponent();
             needsToRebuildList = false;
         }
@@ -97,15 +101,6 @@ public class ComponentManager {
             activeObjectsPerComponent.put(component, activeObjectsForThisComponent);
         }
     }
-
-    private void rebuildEntityList() {
-        for (var entity : entityList) {
-            if (entity.isActive(activeStage)) {
-                activeEntityList.add(entity);
-            }
-        }
-    }
-
     private void acquireLockOn(List<Discriminator> components) {
         sortLockOrder(components);
         for (var component : components) {
@@ -137,7 +132,6 @@ public class ComponentManager {
     }
 
     private void invalidateCache() {
-        activeEntityList = new ArrayList<>();
         activeObjectsPerComponent = new HashMap<>();
         activeObjectsPerComponents = new HashMap<>();
         needsToRebuildList = true;
@@ -197,6 +191,10 @@ public class ComponentManager {
         entityList.add(entity);
     }
 
+    /**
+     * Used by handles provided by this ComponentManager to release resources (tables that are locked).
+     */
+    @FunctionalInterface
     public interface RemoveLockInterface {
         void remove();
     }

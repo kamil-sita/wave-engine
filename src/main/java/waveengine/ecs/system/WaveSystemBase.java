@@ -29,9 +29,9 @@ public abstract class WaveSystemBase {
         return comp;
     }
 
-    protected TableGroup.Table getTableFor(Discriminator component) {
+    protected <T> TableGroup.Table<T> getTableFor(Discriminator component, Class<T> classOfT) {
         var comp = getTablesFor(component);
-        return comp.getTable(component);
+        return comp.getTable(component, classOfT);
     }
 
     /**

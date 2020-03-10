@@ -4,14 +4,14 @@ package waveengine.ecs.component;
 import waveengine.Discriminator;
 
 public interface TableGroup {
-    Table getTable(Discriminator table);
+    <T> Table<T> getTable(Discriminator table, Class<T> classOfT);
 
-    interface WorkOnTable {
-        void doSthOnObject(Integer integer, Object object);
+    interface WorkOnTable<T> {
+        void doSthOnObject(Integer integer, T object);
     }
 
-    interface Table {
-        void iterate(boolean ordered, WorkOnTable workOnTable);
-        Object get(Integer index);
+    interface Table<T> {
+        void iterate(boolean ordered, WorkOnTable<T> workOnTable);
+        T get(Integer index);
     }
 }

@@ -18,19 +18,17 @@ public class Example {
             @Override
             public void update(WaveCanvas canvas, double deltaTime) {
                 var tables = getTablesFor(DiscComponent.GRAPHICS, DiscComponent.POSITION, DiscComponent.SCALE);
-                var positionTable = tables.getTable(DiscComponent.POSITION);
-                var scaleTable = tables.getTable(DiscComponent.SCALE);
-                tables.getTable(DiscComponent.GRAPHICS).iterate(true,
-                        (index, object) -> {
-
-                            var graphObj = (ComponentGraphics) object;
+                var positionTable = tables.getTable(DiscComponent.POSITION, ComponentPosition.class);
+                var scaleTable = tables.getTable(DiscComponent.SCALE, ComponentScale.class);
+                tables.getTable(DiscComponent.GRAPHICS, ComponentGraphics.class).iterate(true,
+                        (index, graphObj) -> {
 
                             var graphicalResourceManager = (GraphicalResourceManager) getSystem(WaveLibSystemDiscriminator.GRAPHICAL_RESOURCE_MANAGER);
                             var res = graphicalResourceManager.getResourceOrLoad(Resource.TEST_RESOURCE);
 
                             var parameters = graphObj.getParameters();
-                            var position = (ComponentPosition) positionTable.get(index);
-                            var optionalScale = (ComponentScale) scaleTable.get(index);
+                            var position = positionTable.get(index);
+                            var optionalScale = scaleTable.get(index);
 
                             parameters.setX((float) position.getX());
                             parameters.setY((float) position.getY());
@@ -70,10 +68,9 @@ public class Example {
         wave.addSystem(DiscSystems.PHYSIC_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
             public void update(double deltaTime) {
-                var physicsComponent = getTableFor(DiscComponent.POSITION);
+                var physicsComponent = getTableFor(DiscComponent.POSITION, ComponentPosition.class);
                 physicsComponent.iterate(true,
-                        (index, object) -> {
-                            var physObj = (ComponentPosition) object;
+                        (index, physObj) -> {
                             physObj.update(deltaTime);
                         });
                 freeComponents();
@@ -85,9 +82,8 @@ public class Example {
         wave.addSystem(DiscSystems.SCALE_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
             protected void update(double deltaTime) {
-                var scaleTable = getTableFor(DiscComponent.SCALE);
-                scaleTable.iterate(true, (integer, object) -> {
-                    var scaleObj = (ComponentScale) object;
+                var scaleTable = getTableFor(DiscComponent.SCALE, ComponentScale.class);
+                scaleTable.iterate(true, (integer, scaleObj) -> {
                     scaleObj.iterate(deltaTime);
                 });
             }

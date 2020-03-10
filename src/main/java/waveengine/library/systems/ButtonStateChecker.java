@@ -11,10 +11,9 @@ public class ButtonStateChecker extends WaveSystem {
         int y = getInteractions().getMouseY();
         boolean isPressed = getInteractions().isMouseClicked();
 
-        var buttons = getTableFor(WaveLibObjectDiscriminator.BUTTONS);
+        var buttons = getTableFor(WaveLibObjectDiscriminator.BUTTONS, Clickable.class);
 
-        buttons.iterate(true, (integer, object) -> {
-            var button = (Clickable) object;
+        buttons.iterate(true, (integer, button) -> {
             button.checkForPress(x, y, isPressed);
         });
     }

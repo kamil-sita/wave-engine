@@ -19,8 +19,8 @@ public class ManagedTableGroup implements TableGroup, AutoCloseable {
     }
 
     @Override
-    public Table getTable(Discriminator table) {
-        return tableGroup.getTable(table);
+    public <T> Table<T> getTable(Discriminator table, Class<T> classOfT) {
+        return tableGroup.getTable(table, classOfT);
     }
 
     @Override

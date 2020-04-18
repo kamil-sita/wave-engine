@@ -5,6 +5,7 @@ import waveengine.Discriminator;
 import waveengine.WaveEngineParameters;
 import waveengine.WaveEngineRuntimeSettings;
 import waveengine.ecs.component.ComponentManager;
+import waveengine.ecs.entity.EntityBuilder;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.services.NotifyingService;
 import waveengine.ecs.system.WaveSystem;
@@ -14,6 +15,7 @@ public final class WaveEngine {
     private final WaveEngineParameters waveEngineParameters;
     private final WaveEngineRuntimeSettings waveEngineRuntimeSettings = new WaveEngineRuntimeSettings();
     private final WaveEngineRunning waveEngineRunning;
+    private final EntityBuilder entityBuilder;
 
     public static WaveEngine newInstance(WaveEngineParameters parameters,  RenderingSystem renderingSystem) {
         Logger.getLogger().logInfo("Creating new WaveEngine instance");
@@ -25,6 +27,7 @@ public final class WaveEngine {
         this.waveEngineParameters = parameters;
         renderingSystem.setName("RENDERING SYSTEM");
         waveEngineRunning = new WaveEngineRunning(this);
+        entityBuilder = new EntityBuilder(waveEngineRunning.getComponentManager());
         renderingSystem.setWaveEngineRunning(waveEngineRunning);
         waveEngineRunning.setRenderingSystem(renderingSystem);
     }
@@ -114,6 +117,10 @@ public final class WaveEngine {
         }
 
         //
+    }
+
+    public EntityBuilder getEntityBuilder() {
+        return entityBuilder;
     }
 
 }

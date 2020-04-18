@@ -46,22 +46,22 @@ public class Example {
         var wave = WaveEngine.newInstance(new WaveEngineParameters(), renderingSystem);
         GraphicalResourceManager.addSelf(wave);
 
-        var cf = wave.getComponentManager();
-
         //objects for first stage of the loop
         for (int i = 0; i < 50000; i++) {
-            var entity = Entity.getEntityActiveOnOneStage(DiscStages.MAIN_LOOP0);
-            cf.addEntityToComponent(entity, DiscComponent.POSITION, new ComponentPosition());
-            cf.addEntityToComponent(entity, DiscComponent.GRAPHICS, new ComponentGraphics());
-            cf.addEntityToComponent(entity, DiscComponent.SCALE, new ComponentScale());
+            wave.getEntityBuilder()
+                    .oneStage(DiscStages.MAIN_LOOP0)
+                    .addToComponent(DiscComponent.POSITION, new ComponentPosition())
+                    .addToComponent(DiscComponent.GRAPHICS, new ComponentGraphics())
+                    .addToComponent(DiscComponent.SCALE, new ComponentScale());
         }
 
 
-        //objects for first stage of the loop
+        //objects for second stage of the loop
         for (int i = 0; i < 10; i++) {
-            var entity = Entity.getEntityActiveOnOneStage(DiscStages.MAIN_LOOP1);
-            cf.addEntityToComponent(entity, DiscComponent.POSITION, new ComponentPosition());
-            cf.addEntityToComponent(entity, DiscComponent.GRAPHICS, new ComponentGraphics());
+            wave.getEntityBuilder()
+                    .oneStage(DiscStages.MAIN_LOOP1)
+                    .addToComponent(DiscComponent.POSITION, new ComponentPosition())
+                    .addToComponent(DiscComponent.GRAPHICS, new ComponentGraphics());
         }
 
         //position system

@@ -60,12 +60,4 @@ public class Clickable {
         }
     }
 
-
-    public void addSelf(WaveEngine waveEngine, Discriminator activeStage) {
-        waveEngine.addSystem(WaveSystems.BUTTON_PRESS_CHECKER, UpdatePolicy.UPDATE_PARALLEL, new ButtonStateChecker());
-
-        var entity = Entity.getEntityActiveOnOneStage(activeStage);
-        var manager = waveEngine.getComponentManager();
-
-    }
 }

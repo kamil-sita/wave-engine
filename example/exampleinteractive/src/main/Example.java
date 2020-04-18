@@ -51,15 +51,15 @@ public class Example {
         var wave = WaveEngine.newInstance(new WaveEngineParameters(), renderingSystem);
         GraphicalResourceManager.addSelf(wave);
 
-        var cf = wave.getComponentManager();
-
         var addButtonClickable = new Clickable(true, 400, 200, 150, 150, () -> {
-            System.out.println("FIRE!");
-            var newEntity = Entity.getEntityActiveOnOneStage(Stages.MAIN_STAGE);
-            wave.getComponentManager().addEntityToComponent(newEntity, Tables.PHYSICAL_ATTRIBUTES_TABLE, new PhysicalAttributes());
-            wave.getComponentManager().addEntityToComponent(newEntity, Tables.GRAPHICS, new GraphicalObject());
+            wave.getEntityBuilder()
+                    .oneStage(Stages.MAIN_STAGE)
+                    .addToComponent(Tables.PHYSICAL_ATTRIBUTES_TABLE, new PhysicalAttributes())
+                    .addToComponent(Tables.GRAPHICS, new GraphicalObject());
         });
-        cf.addEntityToComponent(Entity.getEntityActiveOnOneStage(Stages.MAIN_STAGE), WaveTables.BUTTONS, addButtonClickable);
+        wave.getEntityBuilder()
+                .oneStage(Stages.MAIN_STAGE)
+                .addToComponent(WaveTables.BUTTONS, addButtonClickable);
 
         //button state checker system
         ButtonStateChecker.addSelf(wave);

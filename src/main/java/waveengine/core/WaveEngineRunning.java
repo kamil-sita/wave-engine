@@ -4,6 +4,7 @@ import waveengine.Discriminator;
 import waveengine.WaveEngineParameters;
 import waveengine.WaveEngineRuntimeSettings;
 import waveengine.ecs.component.ComponentManager;
+import waveengine.ecs.entity.EntityBuilder;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.GuiImplementation;
@@ -105,5 +106,9 @@ public class WaveEngineRunning {
 
     public ComponentManager getComponentManager() {
         return facade;
+    }
+
+    public EntityBuilder getEntityBuilder() {
+        return waveEngine.getEntityBuilder();
     }
 }

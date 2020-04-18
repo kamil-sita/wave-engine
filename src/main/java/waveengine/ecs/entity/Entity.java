@@ -12,19 +12,6 @@ public abstract class Entity {
         id = EntityService.INSTANCE.getNewId();
     }
 
-    public static Entity getEntityActiveOnOneStage(Discriminator stageActive) {
-        return new EntityActiveOneStage(stageActive);
-    }
-
-    public static Entity getEntityActiveAlways() {
-        return new EntityAcceptsAll();
-    }
-
-    public static Entity getEntityActivePredicate(Predicate<? super Discriminator> predicate) {
-        return new EntityAcceptsPredicate(predicate);
-    }
-
-
     public int getId() {
         return id;
     }

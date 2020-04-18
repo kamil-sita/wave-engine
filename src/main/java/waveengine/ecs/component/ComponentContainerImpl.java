@@ -2,10 +2,7 @@ package waveengine.ecs.component;
 
 import waveengine.Discriminator;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class ComponentContainerImpl implements TableGroup {
     HashMap<Discriminator, Table> map = new HashMap<>();
@@ -48,6 +45,19 @@ public class ComponentContainerImpl implements TableGroup {
                 for (var obj : objectMap.entrySet()) {
                     workOnTable.doSthOnObject(obj.getKey(), obj.getValue());
                 }
+            }
+        }
+
+        @Override
+        public void iterateReverse(WorkOnTable workOnTable) {
+            if (orderList == null) {
+                buildOrderList();
+            }
+            var reverseIterator = orderList.listIterator(orderList.size());
+            while (reverseIterator.hasPrevious()) {
+                var index = reverseIterator.previous();
+                var obj = objectMap.get(index);
+                workOnTable.doSthOnObject(index, obj);
             }
         }
 

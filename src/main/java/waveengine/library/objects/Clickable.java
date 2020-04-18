@@ -5,7 +5,7 @@ import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
 import waveengine.ecs.entity.Entity;
 import waveengine.library.systems.ButtonStateChecker;
-import waveengine.library.WaveLibSystemDiscriminator;
+import waveengine.library.WaveSystems;
 
 public class Clickable {
 
@@ -26,8 +26,8 @@ public class Clickable {
     public Clickable(boolean fromCenter, int x, int y, int width, int height, Runnable onButtonPressed) {
         this(x, y, width, height, onButtonPressed);
         if (fromCenter) {
-            x -= width/2;
-            y -= height/2;
+            this.x -= width/2;
+            this.y -= height/2;
         }
     }
 
@@ -62,7 +62,7 @@ public class Clickable {
 
 
     public void addSelf(WaveEngine waveEngine, Discriminator activeStage) {
-        waveEngine.addSystem(WaveLibSystemDiscriminator.BUTTON_PRESS_CHECKER, UpdatePolicy.UPDATE_PARALLEL, new ButtonStateChecker());
+        waveEngine.addSystem(WaveSystems.BUTTON_PRESS_CHECKER, UpdatePolicy.UPDATE_PARALLEL, new ButtonStateChecker());
 
         var entity = Entity.getEntityActiveOnOneStage(activeStage);
         var manager = waveEngine.getComponentManager();

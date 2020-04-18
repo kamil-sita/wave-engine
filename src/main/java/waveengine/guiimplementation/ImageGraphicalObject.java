@@ -15,7 +15,8 @@ public class ImageGraphicalObject implements GraphicalObject {
     private static GraphicsConfiguration graphicsConfiguration;
 
     public static ImageGraphicalObject load(ResourceLocation location) {
-        URL url = ImageGraphicalObject.class.getClassLoader().getResource(location.getResourceLocation());
+        var resloc = location.getResourceLocation();
+        URL url = ImageGraphicalObject.class.getClassLoader().getResource(resloc);
         try {
             var image = ImageIO.read(url);
             if (graphicsConfiguration == null) {

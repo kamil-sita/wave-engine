@@ -18,4 +18,16 @@ public final class WaveEngineParameters {
     public boolean useRepaint() {
         return true;
     }
+
+    public boolean singleThreaded() {
+        return true;
+    }
+
+    public int acquireResourceRetries() {
+        return 3;
+    }
+
+    public long acquireResourceSingleRequestTime() {
+        return 400;
+    }
 }

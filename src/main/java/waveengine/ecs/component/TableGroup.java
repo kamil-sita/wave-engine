@@ -12,6 +12,7 @@ public interface TableGroup {
 
     interface Table<T> {
         void iterate(boolean ordered, WorkOnTable<T> workOnTable);
+        void iterateReverse(WorkOnTable<T> workOnTable);
         T get(Integer index);
     }
 }

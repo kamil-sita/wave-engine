@@ -27,7 +27,7 @@ public class NotifyingService {
     public void asyncNotifyListeners(Discriminator cause, Object message) {
         executorService.submit(() -> {
             if (cause instanceof WaveEngineSystemEvents) {
-                Logger.getLogger().log("System Event: " + ((WaveEngineSystemEvents) cause).name() + ", " + message);
+                Logger.getLogger().logInfo("System Event: " + ((WaveEngineSystemEvents) cause).name() + ", " + message);
             }
 
             if (listeners.containsKey(cause)) {

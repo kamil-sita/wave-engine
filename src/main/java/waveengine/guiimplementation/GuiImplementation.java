@@ -34,7 +34,7 @@ public final class GuiImplementation {
             graphics.fillRect(0, 0, runtimeParameters.width(), runtimeParameters.height());
         }
         var waveCanvas = new WaveCanvas(graphics);
-        waveEngineRunning.getRenderingSystem().update(waveCanvas, delta);
+        waveEngineRunning.getRenderingSystem().updateAndRelease(waveCanvas, delta);
         graphics.dispose();
         bufferStrategy.show();
     }

@@ -10,6 +10,7 @@ import waveengine.services.NotifyingService;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class ComponentManager {
 
@@ -20,6 +21,7 @@ public class ComponentManager {
     private Map<List<Discriminator>, TableGroup> activeObjectsPerComponents = new HashMap<>();
     private List<Entity> entityList = new ArrayList<>();
     private Set<Discriminator> components = new HashSet<>();
+    private WaveEngineRunning waveEngineRunning;
 
 
     public ComponentManager(WaveEngineRunning waveEngineRunning) {
@@ -29,19 +31,22 @@ public class ComponentManager {
                 setActiveStage((Discriminator) message);
             }
         });
+        semaphoring = new Semaphoring(waveEngineRunning);
+        this.waveEngineRunning = waveEngineRunning;
     }
 
     private ComponentManager setActiveStage(Discriminator activeStage) {
-        modificationSemaphore.acquireUninterruptibly();
+        semaphoring.modificationLockObtain();
         invalidateCache();
         this.activeStage = activeStage;
-        modificationSemaphore.release();
+        semaphoring.modificationLockRelease();
         return this;
     }
 
     private boolean needsToRebuildList = true;
 
-    private Semaphore modificationSemaphore = new Semaphore(1);
+    private Semaphoring semaphoring;
+
     private Map<Discriminator, Semaphore> discriminatorSemaphoreMap = new ConcurrentHashMap<>();
 
     /**
@@ -49,21 +54,29 @@ public class ComponentManager {
      * @param selectedTables tables that are required.
      * @return ManagedTableGroup object with required tables.
      */
-    public ManagedTableGroup getTables(Discriminator... selectedTables) {
-        var compList = Arrays.asList(selectedTables);
-        acquireLockOn(compList);
-        var tables = lazyGetTables(compList);
+    public ManagedTableGroup getTables(String owner, Discriminator... selectedTables) throws Semaphoring.TableNotOwnedException {
+        Semaphoring.TableNotOwnedException exception = null;
+        for (int i = 0; i < waveEngineRunning.getWaveEngineParameters().acquireResourceRetries(); i++) {
+            exception = semaphoring.exclusiveLockObtain(selectedTables, owner);
+            if (exception == null) {
+                break;
+            }
+        }
+        if (exception != null) {
+            throw exception;
+        }
+        var tables = lazyGetTables(owner, Arrays.asList(selectedTables));
         return new ManagedTableGroup(
                 tables,
-                () -> releaseLockOn(compList));
+                () -> semaphoring.exclusiveLockRelease(selectedTables, owner));
     }
 
-    private TableGroup lazyGetTables(List<Discriminator> components) {
-        modificationSemaphore.acquireUninterruptibly();
+    private synchronized TableGroup lazyGetTables(String owner, List<Discriminator> components) {
+        semaphoring.modificationLockObtain();
 
         if (activeObjectsPerComponents.containsKey(components)) {
             var retVal = activeObjectsPerComponents.get(components);
-            modificationSemaphore.release();
+            semaphoring.modificationLockRelease();
             return retVal;
         }
 
@@ -81,7 +94,8 @@ public class ComponentManager {
             as.add(component, activeObjectsPerComponent.get(component));
         }
         activeObjectsPerComponents.put(components, as);
-        modificationSemaphore.release();
+
+        semaphoring.modificationLockRelease();
         return as;
     }
 
@@ -101,28 +115,6 @@ public class ComponentManager {
             activeObjectsPerComponent.put(component, activeObjectsForThisComponent);
         }
     }
-    private void acquireLockOn(List<Discriminator> components) {
-        sortLockOrder(components);
-        for (var component : components) {
-            synchronized (component) {
-                discriminatorSemaphoreMap.putIfAbsent(component, new Semaphore(1));
-                discriminatorSemaphoreMap.get(component).acquireUninterruptibly();
-            }
-
-        }
-    }
-
-    private void releaseLockOn(List<Discriminator> components) {
-        for (var component : components) {
-            var semaphore = discriminatorSemaphoreMap.get(component);
-            semaphore.release();
-        }
-    }
-
-    private void sortLockOrder(List<Discriminator> systems) {
-        systems.sort(Comparator.comparingLong(Discriminator::hashCode));
-    }
-
 
 
     private void invalidateCacheIfSystemIsActive(Entity entity) {
@@ -142,7 +134,7 @@ public class ComponentManager {
 
         HashMap<Integer, Object> map = new HashMap<>();
         activeObjectsPerComponent.put(discriminator, map);
-        var objectForSystem = objectsPerComponent.get(discriminator);
+        var objectForSystem = objectsPerComponent.getOrDefault(discriminator, new HashMap<>());
         for (var object : objectForSystem.entrySet()) {
             int id = object.getKey();
             if (entityList.get(id).isActive(discriminator)) {
@@ -152,7 +144,7 @@ public class ComponentManager {
     }
 
     public void addEntityToComponent(Entity entity, Discriminator component, Object object) {
-        modificationSemaphore.acquireUninterruptibly();
+        semaphoring.modificationLockObtain();
 
         addEntity(entity);
         if (!objectsPerComponent.containsKey(component)) {
@@ -164,15 +156,15 @@ public class ComponentManager {
 
         invalidateCacheIfSystemIsActive(entity);
 
-        modificationSemaphore.release();
+        semaphoring.modificationLockRelease();
     }
 
     private void removeEntity(Entity entity) {
-        modificationSemaphore.acquireUninterruptibly();
+        semaphoring.modificationLockObtain();
         invalidateCacheIfSystemIsActive(entity);
         entityList.set(entity.getId(), null);
 
-        modificationSemaphore.release();
+        semaphoring.modificationLockRelease();
     }
 
     private void addEntity(Entity entity) {
@@ -183,7 +175,7 @@ public class ComponentManager {
         if (entityList.size() > entity.getId()) {
             return;
         }
-        Logger.getLogger().log("Warning: adding entity of id: " + entity.getId() + ", when there is a gap (entitylist has " + entityList.size() + ") elements");
+        Logger.getLogger().logWarning("Warning: adding entity of id: " + entity.getId() + ", when there is a gap (entitylist has " + entityList.size() + ") elements");
         int gapSize = entity.getId() - entityList.size() - 1;
         for (int i = 0; i < gapSize; i++) {
             entityList.add(null);

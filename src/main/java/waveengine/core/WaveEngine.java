@@ -13,18 +13,20 @@ public final class WaveEngine {
 
     private final WaveEngineParameters waveEngineParameters;
     private final WaveEngineRuntimeSettings waveEngineRuntimeSettings = new WaveEngineRuntimeSettings();
-    private final WaveEngineRunning waveEngineRunning = new WaveEngineRunning(this);
+    private final WaveEngineRunning waveEngineRunning;
 
     public static WaveEngine newInstance(WaveEngineParameters parameters,  RenderingSystem renderingSystem) {
+        Logger.getLogger().logInfo("Creating new WaveEngine instance");
         return new WaveEngine(parameters, renderingSystem);
     }
 
 
     private WaveEngine(WaveEngineParameters parameters, RenderingSystem renderingSystem) {
-
+        this.waveEngineParameters = parameters;
+        renderingSystem.setName("RENDERING SYSTEM");
+        waveEngineRunning = new WaveEngineRunning(this);
         renderingSystem.setWaveEngineRunning(waveEngineRunning);
         waveEngineRunning.setRenderingSystem(renderingSystem);
-        this.waveEngineParameters = parameters;
     }
 
 
@@ -32,17 +34,27 @@ public final class WaveEngine {
      * Starts WaveEngine.
      */
     public void launch() {
+        Logger.getLogger().logInfo("Launching WaveEngine");
+        Logger.getLogger().logInfo("Setting properties");
         System.setProperty("sun.java2d.translaccel", "True");
         System.setProperty("sun.java2d.opengl", "True");
+        Logger.getLogger().logInfo("Configuring self services");
         configureSelfServices();
+        Logger.getLogger().logInfo("Launching");
         waveEngineRunning.launch();
     }
 
     public void addSystem(Discriminator systemDiscriminator, UpdatePolicy updatePolicy, WaveSystem system) {
         if (!waveEngineRunning.getSystems().containsKey(systemDiscriminator)) {
+            if (!system.hasName()) {
+                system.setName(systemDiscriminator.toString());
+            }
             system.setWaveEngineRunning(waveEngineRunning);
             waveEngineRunning.getSystems().put(systemDiscriminator, system);
             waveEngineRunning.getScheduler().addSystem(system, updatePolicy);
+            Logger.getLogger().logInfo("Added system: " + system.getName());
+        } else {
+            Logger.getLogger().logError("System with discriminator: " + systemDiscriminator.toString() + " already exists");
         }
     }
 

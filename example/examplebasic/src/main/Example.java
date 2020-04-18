@@ -1,29 +1,29 @@
 package main;
 
-import waveengine.Discriminator;
 import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
 import waveengine.WaveEngineParameters;
 import waveengine.core.WaveEngineSystemEvents;
+import waveengine.ecs.component.Semaphoring;
 import waveengine.ecs.entity.Entity;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.systems.GraphicalResourceManager;
-import waveengine.library.WaveLibSystemDiscriminator;
+import waveengine.library.WaveSystems;
 
 public class Example {
     public static void main(String[] args) {
         var renderingSystem = new RenderingSystem() {
             @Override
-            public void update(WaveCanvas canvas, double deltaTime) {
+            public void update(WaveCanvas canvas, double deltaTime) throws Semaphoring.TableNotOwnedException {
                 var tables = getTablesFor(DiscComponent.GRAPHICS, DiscComponent.POSITION, DiscComponent.SCALE);
                 var positionTable = tables.getTable(DiscComponent.POSITION, ComponentPosition.class);
                 var scaleTable = tables.getTable(DiscComponent.SCALE, ComponentScale.class);
                 tables.getTable(DiscComponent.GRAPHICS, ComponentGraphics.class).iterate(true,
                         (index, graphObj) -> {
 
-                            var graphicalResourceManager = (GraphicalResourceManager) getSystem(WaveLibSystemDiscriminator.GRAPHICAL_RESOURCE_MANAGER);
+                            var graphicalResourceManager = (GraphicalResourceManager) getSystem(WaveSystems.GRAPHICAL_RESOURCE_MANAGER);
                             var res = graphicalResourceManager.getResourceOrLoad(Resource.TEST_RESOURCE);
 
                             var parameters = graphObj.getParameters();
@@ -67,7 +67,7 @@ public class Example {
         //position system
         wave.addSystem(DiscSystems.PHYSIC_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
-            public void update(double deltaTime) {
+            public void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
                 var physicsComponent = getTableFor(DiscComponent.POSITION, ComponentPosition.class);
                 physicsComponent.iterate(true,
                         (index, physObj) -> {
@@ -81,7 +81,7 @@ public class Example {
         //scale system - objects size change in time
         wave.addSystem(DiscSystems.SCALE_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
-            protected void update(double deltaTime) {
+            protected void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
                 var scaleTable = getTableFor(DiscComponent.SCALE, ComponentScale.class);
                 scaleTable.iterate(true, (integer, scaleObj) -> {
                     scaleObj.iterate(deltaTime);

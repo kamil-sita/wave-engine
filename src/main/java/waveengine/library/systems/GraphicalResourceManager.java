@@ -7,7 +7,7 @@ import waveengine.core.UpdatePolicy;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.GraphicalObject;
 import waveengine.guiimplementation.ImageGraphicalObject;
-import waveengine.library.WaveLibSystemDiscriminator;
+import waveengine.library.WaveSystems;
 import waveengine.threading.AssistedReverseSemaphore;
 
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class GraphicalResourceManager extends WaveSystem {
 
     public static void addSelf(WaveEngine waveEngine) {
         GraphicalResourceManager graphicalResourceManager = new GraphicalResourceManager();
-        waveEngine.addSystem(WaveLibSystemDiscriminator.GRAPHICAL_RESOURCE_MANAGER, UpdatePolicy.NEVER, graphicalResourceManager);
+        waveEngine.addSystem(WaveSystems.GRAPHICAL_RESOURCE_MANAGER, UpdatePolicy.NEVER, graphicalResourceManager);
         waveEngine.addListener(WaveEngineSystemEvents.LOW_ON_MEMORY, graphicalResourceManager::freeMemory);
     }
 

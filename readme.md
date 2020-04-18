@@ -28,4 +28,4 @@ According to Adam Martin (and cited from [Wikipedia](https://en.wikipedia.org/wi
  - others
  
  ## Examples
- In "example" folder there is a simple project that renders thousands of moving circles and alternates between two stages.
+ In "example" folder there are simple examples which will be updated with WaveEngine development.

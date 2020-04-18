@@ -38,9 +38,9 @@ public final class Renderer {
         canvas.setPaint(graphicalObject.additionalColor);
         int xStart = (int) (parameters.getX() - graphicalObject.width/2);
         int yStart = (int) (parameters.getY() - graphicalObject.height/2);
-        canvas.fillRect(xStart, yStart, graphicalObject.width, graphicalObject.height + 3);
+        canvas.fillRect(xStart - 1, yStart - 1, graphicalObject.width + 2, graphicalObject.height + 4);
         canvas.setPaint(graphicalObject.mainColor);
-        canvas.fillRect(xStart, yStart, graphicalObject.width, graphicalObject.height + 3);
+        canvas.fillRect(xStart, yStart, graphicalObject.width, graphicalObject.height);
         canvas.setPaint(paint);
     }
 
@@ -72,7 +72,7 @@ public final class Renderer {
     private static void cannotRender(GraphicalObject graphicalObject) {
 
         if (!firstLogged) {
-            Logger.getLogger().log("Could not render object " + graphicalObject + ". Will not report any more problems from renderer");
+            Logger.getLogger().logWarning("Could not render object " + graphicalObject + ". Will not report any more problems from renderer");
             firstLogged = true;
         }
     }

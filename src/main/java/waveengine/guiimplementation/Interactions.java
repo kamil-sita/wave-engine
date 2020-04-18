@@ -11,7 +11,7 @@ public class Interactions {
     private WaveEngineRunning waveEngineRunning;
     private int x;
     private int y;
-    private boolean mouseClicked = false;
+    private boolean mousePressed = false;
 
     public Interactions(WaveEngineRunning waveEngineRunning) {
         this.waveEngineRunning = waveEngineRunning;
@@ -26,8 +26,8 @@ public class Interactions {
         return y;
     }
 
-    public boolean isMouseClicked() {
-        return mouseClicked;
+    public boolean isMousePressed() {
+        return mousePressed;
     }
 
     Listener getListener() {
@@ -71,17 +71,16 @@ public class Interactions {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            mouseClicked = true;
         }
 
         @Override
         public void mousePressed(MouseEvent e) {
-
+            mousePressed = true;
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            mouseClicked = false;
+            mousePressed = false;
         }
 
         @Override
@@ -101,8 +100,8 @@ public class Interactions {
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            x = e.getXOnScreen();
-            y = e.getYOnScreen();
+            x = e.getX();
+            y = e.getY();
         }
 
 

@@ -17,11 +17,16 @@ public abstract class WaveSystemBase {
     private List<ManagedTableGroup> resourcesHeld = new ArrayList<>();
     private String name;
 
-    public String getName() {
-        if (name == null || name.isEmpty()) {
-            name = this.getClass().getName() + "@" + this.hashCode();
-        }
+    public final String getName() {
         return name;
+    }
+
+    public String getCreator() {
+        return "";
+    }
+
+    public final String getFullName() {
+        return getName() + " [" + getCreator() + "]";
     }
 
     public boolean hasName() {
@@ -52,9 +57,19 @@ public abstract class WaveSystemBase {
         return comp;
     }
 
+    protected ManagedTableGroup getTablesFor(Class<?>... someClass) throws Semaphoring.TableNotOwnedException {
+        var discs = getWaveEngineRunning().getComponentManager().getDiscriminatorForClass(someClass);
+        return getTablesFor(discs);
+    }
+
     protected <T> TableGroup.Table<T> getTableFor(Discriminator component, Class<T> classOfT) throws Semaphoring.TableNotOwnedException {
         var comp = getTablesFor(component);
         return comp.getTable(component, classOfT);
+    }
+
+    protected <T> TableGroup.Table<T> getTableFor(Class<T> classOfT) throws Semaphoring.TableNotOwnedException {
+        var comp = getWaveEngineRunning().getComponentManager().getDiscriminatorForClass(classOfT);
+        return getTableFor(comp, classOfT);
     }
 
     /**
@@ -70,6 +85,14 @@ public abstract class WaveSystemBase {
 
     protected WaveSystem getSystem(Discriminator systemDiscriminator) {
         return getWaveEngineRunning().getSystem(systemDiscriminator);
+    }
+
+    protected <T> T getSystem(Discriminator systemDiscriminator, Class<T> classOfT) {
+        return (T) getWaveEngineRunning().getSystem(systemDiscriminator);
+    }
+
+    protected <T> T getSystem(Class<T> classOfT) {
+        return (T) getWaveEngineRunning().getSystem(classOfT);
     }
 
     protected Interactions getInteractions() {

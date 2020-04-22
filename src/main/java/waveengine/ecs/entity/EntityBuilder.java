@@ -36,6 +36,12 @@ public final class EntityBuilder {
             return this;
         }
 
+
+        public <T> EntityBuilderWithEntity addToComponent(T obj, Class<T> tClass) {
+            componentManager.addEntityToComponent(entity, tClass, obj);
+            return this;
+        }
+
         public EntityBuilderWithEntity setEntity(Entity entity) {
             this.entity = entity;
             return this;

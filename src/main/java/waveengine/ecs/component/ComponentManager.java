@@ -68,6 +68,7 @@ public class ComponentManager {
         var tables = lazyGetTables(owner, Arrays.asList(selectedTables));
         return new ManagedTableGroup(
                 tables,
+                this,
                 () -> semaphoring.exclusiveLockRelease(selectedTables, owner));
     }
 
@@ -89,7 +90,7 @@ public class ComponentManager {
             buildForSystem(component);
         }
 
-        var as = new ComponentContainerImpl();
+        var as = new ComponentContainerImpl(this);
         for (var component : components) {
             as.add(component, activeObjectsPerComponent.get(component));
         }
@@ -143,6 +144,10 @@ public class ComponentManager {
         }
     }
 
+    public void addEntityToComponent(Entity entity, Class<?> clazz, Object object) {
+        addEntityToComponent(entity, getDiscriminatorForClass(clazz), object);
+    }
+
     public void addEntityToComponent(Entity entity, Discriminator component, Object object) {
         semaphoring.modificationLockObtain();
 
@@ -181,6 +186,63 @@ public class ComponentManager {
             entityList.add(null);
         }
         entityList.add(entity);
+    }
+
+    private final Map<Class<?>, Discriminator> discriminatorForClass = Collections.synchronizedMap(new HashMap<>());
+
+    public Discriminator[] getDiscriminatorForClass(Class<?>[] someClass) {
+        Discriminator[] discriminators = new Discriminator[someClass.length]; //todo possible optimization
+
+        for (int i = 0; i < someClass.length; i++) {
+            Class<?> clazz = someClass[i];
+
+            if (discriminatorForClass.containsKey(clazz)) {
+                discriminators[i] = discriminatorForClass.get(clazz);
+                continue;
+            }
+
+            semaphoring.discriminatorForClassAcquire();
+
+            if (!discriminatorForClass.containsKey(clazz)) {
+                discriminatorForClass.put(clazz, new Discriminator() {
+                });
+            }
+            discriminators[i] = discriminatorForClass.get(clazz);
+
+            semaphoring.discriminatorForClassRelease();
+        }
+        return discriminators;
+    }
+
+    public <T> Discriminator getDiscriminatorForClass(Class<T> classOfT, String suggestedName) {
+        if (discriminatorForClass.containsKey(classOfT)) {
+            return discriminatorForClass.get(classOfT);
+        }
+
+        semaphoring.discriminatorForClassAcquire();
+        if (!discriminatorForClass.containsKey(classOfT)) {
+            if (suggestedName == null) {
+                discriminatorForClass.put(classOfT, new Discriminator() {
+                    @Override
+                    public String toString() {
+                        return classOfT.getName();
+                    }
+                });
+            } else {
+                discriminatorForClass.put(classOfT, new Discriminator() {
+                    @Override
+                    public String toString() {
+                        return suggestedName;
+                    }
+                });
+            }
+        }
+        semaphoring.discriminatorForClassRelease();
+        return discriminatorForClass.get(classOfT);
+    }
+
+    public <T> Discriminator getDiscriminatorForClass(Class<T> classOfT) {
+        return getDiscriminatorForClass(classOfT, null);
     }
 
     /**

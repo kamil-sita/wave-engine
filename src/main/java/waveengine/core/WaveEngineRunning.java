@@ -73,6 +73,10 @@ public class WaveEngineRunning {
         return systems.get(systemDiscriminator);
     }
 
+    public WaveSystem getSystem(Class<?> classOfT) {
+        return getSystem(getComponentManager().getDiscriminatorForClass(classOfT));
+    }
+
 
     public WaveEngineRuntimeSettings getWaveEngineRuntimeSettings() {
         return waveEngine.getWaveEngineRuntimeSettings();

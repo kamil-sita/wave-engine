@@ -1,12 +1,5 @@
 package waveengine.library.objects;
 
-import waveengine.Discriminator;
-import waveengine.core.UpdatePolicy;
-import waveengine.core.WaveEngine;
-import waveengine.ecs.entity.Entity;
-import waveengine.library.systems.ButtonStateChecker;
-import waveengine.library.WaveSystems;
-
 public class Clickable {
 
     private int x;

@@ -5,10 +5,11 @@ import waveengine.Discriminator;
 import java.util.*;
 
 public class ComponentContainerImpl implements TableGroup {
-    HashMap<Discriminator, Table> map = new HashMap<>();
+    private final HashMap<Discriminator, Table> map = new HashMap<>();
+    private final ComponentManager componentManager;
 
-    public ComponentContainerImpl() {
-
+    public ComponentContainerImpl(ComponentManager componentManager) {
+        this.componentManager = componentManager;
     }
 
     public void add(Discriminator component, HashMap<Integer, Object> el) {
@@ -19,6 +20,11 @@ public class ComponentContainerImpl implements TableGroup {
     @Override
     public <T> Table<T> getTable(Discriminator table, Class<T> classOfT) {
         return map.get(table);
+    }
+
+    @Override
+    public ComponentManager getComponentManager() {
+        return componentManager;
     }
 
 
@@ -32,19 +38,14 @@ public class ComponentContainerImpl implements TableGroup {
         }
 
         @Override
-        public void iterate(boolean ordered, WorkOnTable workOnTable) {
-            if (ordered) {
-                if (orderList == null) {
-                    buildOrderList();
-                }
-                for (var index : orderList) {
-                    var obj = objectMap.get(index);
-                    workOnTable.doSthOnObject(index, obj);
-                }
-            } else {
-                for (var obj : objectMap.entrySet()) {
-                    workOnTable.doSthOnObject(obj.getKey(), obj.getValue());
-                }
+        public void iterate(WorkOnTable workOnTable) {
+            //todo thread safe
+            if (orderList == null) {
+                buildOrderList();
+            }
+            for (var index : orderList) {
+                var obj = objectMap.get(index);
+                workOnTable.doSthOnObject(index, obj);
             }
         }
 

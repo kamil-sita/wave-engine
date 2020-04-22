@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class Semaphoring {
 
     private Semaphore modificationLock = new Semaphore(1);
+    private Semaphore discriminatorForClassLock = new Semaphore(1);
     private Semaphore ownerMapChange = new Semaphore(1);
     private Map<Discriminator, String> ownerMap = new HashMap<>();
     private Map<Discriminator, Semaphore> tablesSemaphoreMap = new ConcurrentHashMap<>();
@@ -98,8 +99,13 @@ public class Semaphoring {
         return tablesAsList;
     }
 
+    public void discriminatorForClassAcquire() {
+        discriminatorForClassLock.acquireUninterruptibly();
+    }
 
-
+    public void discriminatorForClassRelease() {
+        discriminatorForClassLock.release();
+    }
 
 
     public static class TableNotOwnedException extends Exception {

@@ -10,6 +10,8 @@ import waveengine.ecs.system.RenderingSystem;
 import waveengine.services.NotifyingService;
 import waveengine.ecs.system.WaveSystem;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public final class WaveEngine {
 
     private final WaveEngineParameters waveEngineParameters;
@@ -49,16 +51,48 @@ public final class WaveEngine {
 
     public void addSystem(Discriminator systemDiscriminator, UpdatePolicy updatePolicy, WaveSystem system) {
         if (!waveEngineRunning.getSystems().containsKey(systemDiscriminator)) {
+            addSystemInternal(systemDiscriminator, updatePolicy, system);
+        } else {
+            Logger.getLogger().logError("System with discriminator: " + systemDiscriminator.toString() + " already exists");
+        }
+    }
+
+    public void addSystem(UpdatePolicy updatePolicy, WaveSystem system) {
+        addSystemInternal(null, updatePolicy, system);
+    }
+
+    private AtomicInteger entityId = new AtomicInteger(0);
+
+    private void addSystemInternal(Discriminator systemDiscriminator, UpdatePolicy updatePolicy, WaveSystem system) {
+        if (systemDiscriminator == null) {
+            if (!system.hasName()) {
+                system.setName("AnonymousSystem@" + entityId.getAndIncrement());
+            }
+            system.setWaveEngineRunning(waveEngineRunning);
+            waveEngineRunning.getSystems().put(new Discriminator() {
+                @Override
+                public String toString() {
+                    return "AnonymousSystem:" + system.getFullName();
+                }
+            }, system);
+            waveEngineRunning.getScheduler().addSystem(system, updatePolicy);
+            Logger.getLogger().logInfo("Added non-callable system: " + system.getFullName());
+            if (updatePolicy == UpdatePolicy.NEVER) {
+                Logger.getLogger().logWarning("Added anonymous system with UpdatePolicy.NEVER. This system cannot be called and will never be updated.");
+            }
+        } else {
             if (!system.hasName()) {
                 system.setName(systemDiscriminator.toString());
             }
             system.setWaveEngineRunning(waveEngineRunning);
             waveEngineRunning.getSystems().put(systemDiscriminator, system);
             waveEngineRunning.getScheduler().addSystem(system, updatePolicy);
-            Logger.getLogger().logInfo("Added system: " + system.getName());
-        } else {
-            Logger.getLogger().logError("System with discriminator: " + systemDiscriminator.toString() + " already exists");
+            Logger.getLogger().logInfo("Added system: " + system.getFullName());
         }
+    }
+
+    public <T> void addSystem(UpdatePolicy updatePolicy, WaveSystem system, Class<T> classOfT) {
+        addSystem(getComponentManager().getDiscriminatorForClass(classOfT, system.getName()), updatePolicy, system);
     }
 
     public void addListener(Discriminator discriminator, NotifyingService.Notifier notifier) {

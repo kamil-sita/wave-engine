@@ -1,7 +1,6 @@
 package main;
 
 import main.discriminators.Stages;
-import main.discriminators.Systems;
 import main.discriminators.Tables;
 import main.tables.PhysicalAttributes;
 import waveengine.WaveEngineParameters;
@@ -9,14 +8,12 @@ import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
 import waveengine.core.WaveEngineSystemEvents;
 import waveengine.ecs.component.Semaphoring;
-import waveengine.ecs.entity.Entity;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.Parameters;
 import waveengine.guiimplementation.ShadedRectangleGraphicalObject;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.WaveTables;
-import waveengine.library.WaveSystems;
 import waveengine.library.objects.Clickable;
 import waveengine.library.systems.ButtonStateChecker;
 import waveengine.library.systems.GraphicalResourceManager;
@@ -30,10 +27,10 @@ public class Example {
             public void update(WaveCanvas canvas, double deltaTime) throws Semaphoring.TableNotOwnedException {
                 var tables = getTablesFor(Tables.GRAPHICS, Tables.PHYSICAL_ATTRIBUTES_TABLE);
                 var positionTable = tables.getTable(Tables.PHYSICAL_ATTRIBUTES_TABLE, PhysicalAttributes.class);
-                tables.getTable(Tables.GRAPHICS, GraphicalObject.class).iterate(true,
+                tables.getTable(Tables.GRAPHICS, GraphicalObject.class).iterate(
                         (index, graphObj) -> {
 
-                            var graphicalResourceManager = (GraphicalResourceManager) getSystem(WaveSystems.GRAPHICAL_RESOURCE_MANAGER);
+                            var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
                             var res = graphicalResourceManager.getResourceOrLoad(Resource.TEST_RESOURCE);
 
                             var parameters = graphObj.getParameters();
@@ -65,16 +62,16 @@ public class Example {
         ButtonStateChecker.addSelf(wave);
 
         //position system
-        wave.addSystem(Systems.PHYSIC_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
+        wave.addSystem(UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
                     @Override
                     public void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
                         var physicsComponent = getTableFor(Tables.PHYSICAL_ATTRIBUTES_TABLE, PhysicalAttributes.class);
-                        physicsComponent.iterate(true,
+                        physicsComponent.iterate(
                                 (index, physObj) -> {
                                     physObj.update(deltaTime);
                                 });
-                    }
                 }
+                }.setName("Position system")
         );
 
         //shutdown listener is needed, since instead of closing, pressing close button sends message to notifier service

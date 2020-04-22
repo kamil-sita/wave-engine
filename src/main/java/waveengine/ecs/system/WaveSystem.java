@@ -13,6 +13,12 @@ public abstract class WaveSystem extends WaveSystemBase {
 
     };
 
+    @Override
+    public WaveSystem setName(String name) {
+        super.setName(name);
+        return this;
+    }
+
     public final void updateIteration(double deltaTime) {
         try {
             update(deltaTime);

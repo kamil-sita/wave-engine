@@ -5,25 +5,23 @@ import waveengine.core.WaveEngine;
 import waveengine.WaveEngineParameters;
 import waveengine.core.WaveEngineSystemEvents;
 import waveengine.ecs.component.Semaphoring;
-import waveengine.ecs.entity.Entity;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.systems.GraphicalResourceManager;
-import waveengine.library.WaveSystems;
 
 public class Example {
     public static void main(String[] args) {
         var renderingSystem = new RenderingSystem() {
             @Override
             public void update(WaveCanvas canvas, double deltaTime) throws Semaphoring.TableNotOwnedException {
-                var tables = getTablesFor(DiscComponent.GRAPHICS, DiscComponent.POSITION, DiscComponent.SCALE);
-                var positionTable = tables.getTable(DiscComponent.POSITION, ComponentPosition.class);
-                var scaleTable = tables.getTable(DiscComponent.SCALE, ComponentScale.class);
-                tables.getTable(DiscComponent.GRAPHICS, ComponentGraphics.class).iterate(true,
+                var tables = getTablesFor(ComponentPosition.class, ComponentScale.class, ComponentGraphics.class);
+                var positionTable = tables.getTable(ComponentPosition.class);
+                var scaleTable = tables.getTable(ComponentScale.class);
+                tables.getTable(ComponentGraphics.class).iterate(
                         (index, graphObj) -> {
 
-                            var graphicalResourceManager = (GraphicalResourceManager) getSystem(WaveSystems.GRAPHICAL_RESOURCE_MANAGER);
+                            var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
                             var res = graphicalResourceManager.getResourceOrLoad(Resource.TEST_RESOURCE);
 
                             var parameters = graphObj.getParameters();
@@ -50,9 +48,9 @@ public class Example {
         for (int i = 0; i < 50000; i++) {
             wave.getEntityBuilder()
                     .oneStage(DiscStages.MAIN_LOOP0)
-                    .addToComponent(DiscComponent.POSITION, new ComponentPosition())
-                    .addToComponent(DiscComponent.GRAPHICS, new ComponentGraphics())
-                    .addToComponent(DiscComponent.SCALE, new ComponentScale());
+                    .addToComponent(new ComponentPosition(), ComponentPosition.class)
+                    .addToComponent(new ComponentGraphics(), ComponentGraphics.class)
+                    .addToComponent(new ComponentScale(), ComponentScale.class);
         }
 
 
@@ -60,16 +58,16 @@ public class Example {
         for (int i = 0; i < 10; i++) {
             wave.getEntityBuilder()
                     .oneStage(DiscStages.MAIN_LOOP1)
-                    .addToComponent(DiscComponent.POSITION, new ComponentPosition())
-                    .addToComponent(DiscComponent.GRAPHICS, new ComponentGraphics());
+                    .addToComponent(new ComponentPosition(), ComponentPosition.class)
+                    .addToComponent(new ComponentGraphics(), ComponentGraphics.class);
         }
 
         //position system
         wave.addSystem(DiscSystems.PHYSIC_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
             public void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
-                var physicsComponent = getTableFor(DiscComponent.POSITION, ComponentPosition.class);
-                physicsComponent.iterate(true,
+                var physicsComponent = getTableFor(ComponentPosition.class);
+                physicsComponent.iterate(
                         (index, physObj) -> {
                             physObj.update(deltaTime);
                         });
@@ -82,8 +80,8 @@ public class Example {
         wave.addSystem(DiscSystems.SCALE_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
             protected void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
-                var scaleTable = getTableFor(DiscComponent.SCALE, ComponentScale.class);
-                scaleTable.iterate(true, (integer, scaleObj) -> {
+                var scaleTable = getTableFor(ComponentScale.class);
+                scaleTable.iterate((integer, scaleObj) -> {
                     scaleObj.iterate(deltaTime);
                 });
             }

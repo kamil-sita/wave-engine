@@ -4,7 +4,6 @@ import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
 import waveengine.ecs.component.Semaphoring;
 import waveengine.ecs.system.WaveSystem;
-import waveengine.library.WaveSystems;
 import waveengine.library.objects.Clickable;
 import waveengine.library.WaveTables;
 
@@ -24,6 +23,12 @@ public class ButtonStateChecker extends WaveSystem {
 
     public static void addSelf(WaveEngine waveEngine) {
         ButtonStateChecker buttonStateChecker = new ButtonStateChecker();
-        waveEngine.addSystem(WaveSystems.BUTTON_PRESS_CHECKER, UpdatePolicy.UPDATE_PARALLEL, buttonStateChecker);
+        buttonStateChecker.setName("Button State Checker");
+        waveEngine.addSystem(UpdatePolicy.UPDATE_PARALLEL, buttonStateChecker, ButtonStateChecker.class);
+    }
+
+    @Override
+    public String getCreator() {
+        return "WAVE";
     }
 }

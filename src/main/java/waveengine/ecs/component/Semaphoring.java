@@ -1,21 +1,19 @@
 package waveengine.ecs.component;
 
 import waveengine.Discriminator;
-import waveengine.core.Logger;
 import waveengine.core.WaveEngineRunning;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 public class Semaphoring {
 
-    private Semaphore modificationLock = new Semaphore(1);
-    private Semaphore discriminatorForClassLock = new Semaphore(1);
-    private Semaphore ownerMapChange = new Semaphore(1);
-    private Map<Discriminator, String> ownerMap = new HashMap<>();
-    private Map<Discriminator, Semaphore> tablesSemaphoreMap = new ConcurrentHashMap<>();
+    private final Semaphore modificationLock = new Semaphore(1);
+    private final Semaphore discriminatorForClassLock = new Semaphore(1);
+    private final Semaphore ownerMapChange = new Semaphore(1);
+    private final Map<Discriminator, String> ownerMap = new HashMap<>();
+    private final Map<Discriminator, Semaphore> tablesSemaphoreMap = new ConcurrentHashMap<>();
 
     private final WaveEngineRunning waveEngineRunning;
 
@@ -34,9 +32,9 @@ public class Semaphoring {
             boolean acquired = false;
 
             tablesSemaphoreMap.putIfAbsent(table, new Semaphore(1));
-            long currentTime = System.nanoTime();
+            long lockAttemptStartTime = System.nanoTime();
             while (true) {
-                if (System.nanoTime() - currentTime > waveEngineRunning.getWaveEngineParameters().acquireResourceSingleRequestTime()) {
+                if (System.nanoTime() - lockAttemptStartTime > waveEngineRunning.getWaveEngineParameters().acquireResourceSingleRequestTime()) {
                     break;
                 }
 
@@ -46,7 +44,9 @@ public class Semaphoring {
                     break;
                 }
 
-                Thread.onSpinWait();
+                if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
+                    Thread.onSpinWait();
+                }
             }
 
             if (!acquired) {

@@ -9,13 +9,14 @@ import waveengine.ecs.component.TableGroup;
 import waveengine.guiimplementation.Interactions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class WaveSystemBase {
     private WaveEngineRunning waveEngineRunning;
     private List<ManagedTableGroup> resourcesHeld = new ArrayList<>();
     private String name;
+    private int iterationAcquiredResources = 0;
+    private boolean iterationAcquiredResourcesWarningShown = false;
 
     public final String getName() {
         return name;
@@ -49,6 +50,15 @@ public abstract class WaveSystemBase {
     }
 
     protected ManagedTableGroup getTablesFor(Discriminator... components) throws Semaphoring.TableNotOwnedException {
+        iterationAcquiredResources++;
+        if (iterationAcquiredResources > 1) {
+            if (!iterationAcquiredResourcesWarningShown) {
+                Logger.getLogger().logWarning(getFullName() + " acquires tables in multiple calls without freeing them. This might lead to data-races.");
+                iterationAcquiredResourcesWarningShown = true;
+            }
+        }
+
+
         var comp = getWaveEngineRunning().getComponentManager().getTables(getName(), components);
         if (comp == null) {
             return null;
@@ -77,6 +87,7 @@ public abstract class WaveSystemBase {
      * before finishing the current iteration - useful if you
      */
     protected void freeComponents() {
+        iterationAcquiredResources = 0;
         for (var comp : resourcesHeld) {
             comp.close();
         }

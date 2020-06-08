@@ -1,6 +1,6 @@
 package main;
 
-import waveengine.guiimplementation.Parameters;
+import waveengine.guiimplementation.renderingparameters.Parameters;
 
 public class ComponentGraphics {
     private Parameters parameters = new Parameters(0, 0);

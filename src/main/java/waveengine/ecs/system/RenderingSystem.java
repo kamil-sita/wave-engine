@@ -13,6 +13,7 @@ public abstract class RenderingSystem extends WaveSystemBase {
     public final void updateAndRelease(WaveCanvas canvas, double deltaTime) {
         try {
             update(canvas, deltaTime);
+            canvas.renderQueue();
         } catch (Exception e) {
             Logger.getLogger().logError(e.getMessage());
             e.printStackTrace();

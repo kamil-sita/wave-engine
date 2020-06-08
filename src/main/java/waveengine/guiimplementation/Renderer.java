@@ -1,6 +1,7 @@
 package waveengine.guiimplementation;
 
 import waveengine.core.Logger;
+import waveengine.guiimplementation.renderingparameters.Parameters;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;

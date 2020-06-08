@@ -1,4 +1,4 @@
-package waveengine.guiimplementation;
+package waveengine.guiimplementation.renderingparameters;
 
 public class Parameters {
     private float x;

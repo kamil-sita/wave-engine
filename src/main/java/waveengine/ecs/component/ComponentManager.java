@@ -56,12 +56,7 @@ public class ComponentManager {
      */
     public ManagedTableGroup getTables(String owner, Discriminator... selectedTables) throws Semaphoring.TableNotOwnedException {
         Semaphoring.TableNotOwnedException exception = null;
-        for (int i = 0; i < waveEngineRunning.getWaveEngineParameters().acquireResourceRetries(); i++) {
-            exception = semaphoring.exclusiveLockObtain(selectedTables, owner);
-            if (exception == null) {
-                break;
-            }
-        }
+        exception = semaphoring.exclusiveLockObtain(selectedTables, owner);
         if (exception != null) {
             throw exception;
         }

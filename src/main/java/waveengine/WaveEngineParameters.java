@@ -20,14 +20,10 @@ public final class WaveEngineParameters {
     }
 
     public boolean singleThreaded() {
-        return true;
+        return false;
     }
 
-    public int acquireResourceRetries() {
-        return 5000;
-    }
-
-    public long acquireResourceSingleRequestTime() {
+    public long acquireResourceRequestTimeMiliseconds() {
         return 10;
     }
 }

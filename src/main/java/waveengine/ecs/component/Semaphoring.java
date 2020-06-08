@@ -6,6 +6,7 @@ import waveengine.core.WaveEngineRunning;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class Semaphoring {
 
@@ -31,21 +32,19 @@ public class Semaphoring {
         for (var table : orderedTables) {
             boolean acquired = false;
 
-            tablesSemaphoreMap.putIfAbsent(table, new Semaphore(1));
-            long lockAttemptStartTime = System.nanoTime();
+            tablesSemaphoreMap.putIfAbsent(table, new Semaphore(1, true));
             while (true) {
-                if (System.nanoTime() - lockAttemptStartTime > waveEngineRunning.getWaveEngineParameters().acquireResourceSingleRequestTime()) {
+                try {
+                    boolean acquiredSemaphore = tablesSemaphoreMap.get(table).tryAcquire(
+                            waveEngineRunning.getWaveEngineParameters().acquireResourceRequestTimeMiliseconds(),
+                            TimeUnit.MILLISECONDS
+                    );
+                    if (acquiredSemaphore) {
+                        acquired = true;
+                    }
                     break;
-                }
-
-                boolean acquiredSemaphore = tablesSemaphoreMap.get(table).tryAcquire();
-                if (acquiredSemaphore) {
-                    acquired = true;
-                    break;
-                }
-
-                if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
-                    Thread.onSpinWait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
 

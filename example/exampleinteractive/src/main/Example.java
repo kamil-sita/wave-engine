@@ -10,7 +10,7 @@ import waveengine.core.WaveEngineSystemEvents;
 import waveengine.ecs.component.Semaphoring;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
-import waveengine.guiimplementation.Parameters;
+import waveengine.guiimplementation.renderingparameters.Parameters;
 import waveengine.guiimplementation.ShadedRectangleGraphicalObject;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.WaveTables;
@@ -29,7 +29,6 @@ public class Example {
                 var positionTable = tables.getTable(Tables.PHYSICAL_ATTRIBUTES_TABLE, PhysicalAttributes.class);
                 tables.getTable(Tables.GRAPHICS, GraphicalObject.class).iterate(
                         (index, graphObj) -> {
-
                             var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
                             var res = graphicalResourceManager.getResourceOrLoad(Resource.TEST_RESOURCE);
 

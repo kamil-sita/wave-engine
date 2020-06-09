@@ -71,7 +71,6 @@ public final class Renderer {
     }
 
     private static void cannotRender(GraphicalObject graphicalObject) {
-
         if (!firstLogged) {
             Logger.getLogger().logWarning("Could not render object " + graphicalObject + ". Will not report any more problems from renderer");
             firstLogged = true;

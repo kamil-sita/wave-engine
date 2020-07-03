@@ -28,7 +28,7 @@ public class SchedulerSingleThread implements SchedulerImplementation {
             system.initialize();
         }
 
-        new Thread(this::detachedUpdate).start();
+        new Thread(this::detachedUpdate, "Wave Single Threaded Scheduler").start();
 
     }
 
@@ -45,6 +45,8 @@ public class SchedulerSingleThread implements SchedulerImplementation {
         long lastUpdateTime = System.currentTimeMillis();
         while (true) {
 
+            waveEngineRunning.getComponentManager().update();
+
             long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
 
             while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
@@ -57,12 +59,12 @@ public class SchedulerSingleThread implements SchedulerImplementation {
             double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
             lastUpdateTime = System.currentTimeMillis();
 
-            waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
-
             //updatable
             for (var system : update) { //todo delta by system?
                 system.updateIteration(delta);
             }
+
+            waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
         }
 
 
@@ -72,7 +74,7 @@ public class SchedulerSingleThread implements SchedulerImplementation {
     @Override
     public void addSystem(WaveSystem waveSystem, UpdatePolicy updatePolicy) {
         switch (updatePolicy) {
-            case UPDATE_AFTER_DRAWING_FRAME_PARALLEL:
+            case UPDATE_BEFORE_FRAME:
                 update.add(waveSystem);
                 break;
             case UPDATE_PARALLEL:

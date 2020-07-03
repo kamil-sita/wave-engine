@@ -1,8 +1,8 @@
 package waveengine.util;
 
 public class Pair<T, U> {
-    private T t;
-    private U u;
+    private final T t;
+    private final U u;
 
     public Pair(T t, U u) {
         this.t = t;
@@ -15,6 +15,10 @@ public class Pair<T, U> {
 
     public U getU() {
         return u;
+    }
+
+    public static <T, U> Pair<T, U> of(T t, U u) {
+        return new Pair<>(t, u);
     }
 
     @Override

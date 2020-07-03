@@ -38,7 +38,7 @@ public class Logger {
         }
 
         default String getTime() {
-            SimpleDateFormat sdfDate = new SimpleDateFormat("HH:mm:ss::SS");
+            SimpleDateFormat sdfDate = new SimpleDateFormat("HH:mm:ss:SS");
             Date now = new Date();
             return sdfDate.format(now);
         }

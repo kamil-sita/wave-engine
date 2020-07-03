@@ -7,7 +7,6 @@ import waveengine.WaveEngineParameters;
 import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
 import waveengine.core.WaveEngineSystemEvents;
-import waveengine.ecs.component.Semaphoring;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.renderingparameters.Parameters;
@@ -24,7 +23,7 @@ public class Example {
     public static void main(String[] args) {
         var renderingSystem = new RenderingSystem() {
             @Override
-            public void update(WaveCanvas canvas, double deltaTime) throws Semaphoring.TableNotOwnedException {
+            public void update(WaveCanvas canvas, double deltaTime) {
                 var tables = getTablesFor(Tables.GRAPHICS, Tables.PHYSICAL_ATTRIBUTES_TABLE);
                 var positionTable = tables.getTable(Tables.PHYSICAL_ATTRIBUTES_TABLE, PhysicalAttributes.class);
                 tables.getTable(Tables.GRAPHICS, GraphicalObject.class).iterate(
@@ -63,7 +62,7 @@ public class Example {
         //position system
         wave.addSystem(UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
                     @Override
-                    public void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
+                    public void update(double deltaTime) {
                         var physicsComponent = getTableFor(Tables.PHYSICAL_ATTRIBUTES_TABLE, PhysicalAttributes.class);
                         physicsComponent.iterate(
                                 (index, physObj) -> {

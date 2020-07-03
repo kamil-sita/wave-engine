@@ -7,14 +7,15 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulerMultiThread implements SchedulerImplementation {
 
     public SchedulerMultiThread(WaveEngineRunning waveEngineRunning) {
         this.waveEngineRunning = waveEngineRunning;
-        graphicalThread = new Thread(this::graphicUpdateLoop);
+        graphicalThread = new Thread(this::graphicUpdateLoop, "Wave Multi Threaded Scheduler Graphical Thread");
         executorServiceForParallelJobs = Executors.newFixedThreadPool(waveEngineRunning.getWaveEngineParameters().numberOfThreadsForParallelJobs());
-        executorServiceForAfterGraphicalParallelJobs = Executors.newFixedThreadPool(waveEngineRunning.getWaveEngineParameters().numberOfThreadsForAfterGraphicsJobs());
+        executorServiceForBeforeGraphicalParallelJobs = Executors.newFixedThreadPool(waveEngineRunning.getWaveEngineParameters().numberOfThreadsForAfterGraphicsJobs());
 
         Logger.getLogger().logInfo(
                 "Multi threaded scheduler created, with settings: numberOfThreadsForParallelJobs:" +
@@ -22,41 +23,73 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                         ", numberOfThreadsForAfterGraphicsJobs:" +
                         waveEngineRunning.getWaveEngineParameters().numberOfThreadsForAfterGraphicsJobs()
         );
+
+        synchronizedUpdaterThread = new Thread(() -> {
+            int mySystemCount = systemCount;
+            System.out.println("I know about " + mySystemCount + " systems");
+            while (true) {
+                waveEngineRunning.getComponentManager().update();
+                systemsStartedThisUpdate.set(0);
+                allowWorkBetweenUpdates.release(mySystemCount);
+                while (systemsStartedThisUpdate.get() != mySystemCount) {
+                    Thread.onSpinWait();
+                }
+                allowWorkBetweenUpdates.acquireUninterruptibly(mySystemCount);
+                if (systemCount != mySystemCount) {
+                    Logger.getLogger().logError("System count changed unexpectedly");
+                    return;
+                }
+            }
+        }, "Wave Synchronized Multi Threaded Scheduler Update Thread");
     }
+
+    private final AtomicInteger systemsStartedThisUpdate = new AtomicInteger(0);
 
     private final WaveEngineRunning waveEngineRunning;
     private final Thread graphicalThread;
     private final ExecutorService executorServiceForParallelJobs;
-    private final ExecutorService executorServiceForAfterGraphicalParallelJobs;
+    private final ExecutorService executorServiceForBeforeGraphicalParallelJobs;
+    private final Thread synchronizedUpdaterThread;
 
-    private final Semaphore allowWorkSemaphore = new Semaphore(0);
-    private final Semaphore workCompleteSemaphore = new Semaphore(0);
+    private final Semaphore allowWorkBeforeFrame = new Semaphore(0);
+    private final Semaphore allowWorkAfterFrame = new Semaphore(0);
+
+    private int systemCount;
+    private final Semaphore allowWorkBetweenUpdates = new Semaphore(0);
 
     @Override
     public void start() {
         Logger.getLogger().logInfo("Multithreaded scheduler started");
         graphicalThread.start();
 
+        systemCount = 1;
+
         for (var system : neverUpdate) {
-            system.initialize();;
+            system.initialize();
         }
 
         for (var system : updateParallel) {
             executorServiceForParallelJobs.submit(() -> {
                 updateParallelLoop(system);
             });
+            systemCount++;
         }
 
-        for (var system : updateAfterFrame) {
-            executorServiceForAfterGraphicalParallelJobs.submit(() -> {
+        for (var system : updateBeforeFrame) {
+            executorServiceForBeforeGraphicalParallelJobs.submit(() -> {
                 system.initialize();
 
                 long lastUpdateTime = System.currentTimeMillis();
 
                 boolean workingSuccessfully = true;
 
+                /*
+                Parallel before frame completion is provided by semaphores.
+                 */
                 while (workingSuccessfully) {
-                    allowWorkSemaphore.acquireUninterruptibly();
+                    allowWorkBeforeFrame.acquireUninterruptibly();
+                    allowWorkBetweenUpdates.acquireUninterruptibly();
+                    systemsStartedThisUpdate.incrementAndGet();
                     double delta = (System.currentTimeMillis() - lastUpdateTime)/1000.0;
                     lastUpdateTime = System.currentTimeMillis();
                     try {
@@ -67,21 +100,25 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                         workingSuccessfully = false;
                         waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, system.getName() + " caused exception.");
                     }
-                    workCompleteSemaphore.release();
+                    allowWorkBetweenUpdates.release();
+                    allowWorkAfterFrame.release();
                 }
             });
+            systemCount++;
         }
+
+        synchronizedUpdaterThread.start();
     }
 
-    private final List<WaveSystem> updateAfterFrame = new ArrayList<>();
+    private final List<WaveSystem> updateBeforeFrame = new ArrayList<>();
     private final List<WaveSystem> updateParallel = new ArrayList<>();
     private final List<WaveSystem> neverUpdate = new ArrayList<>();
 
     @Override
     public void addSystem(WaveSystem waveSystem, UpdatePolicy updatePolicy) {
         switch (updatePolicy) {
-            case UPDATE_AFTER_DRAWING_FRAME_PARALLEL:
-                updateAfterFrame.add(waveSystem);
+            case UPDATE_BEFORE_FRAME:
+                updateBeforeFrame.add(waveSystem);
                 break;
             case UPDATE_PARALLEL:
                 updateParallel.add(waveSystem);
@@ -116,16 +153,19 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                     Thread.onSpinWait();
                 }
             }
+            allowWorkBetweenUpdates.acquireUninterruptibly();
+            systemsStartedThisUpdate.incrementAndGet();
 
             double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
             lastUpdateTime = System.currentTimeMillis();
 
+            int workingSystems = updateBeforeFrame.size();
+            allowWorkBeforeFrame.release(workingSystems);
+            allowWorkAfterFrame.acquireUninterruptibly(workingSystems);
+
             waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
 
-
-            int workingSystems = updateAfterFrame.size();
-            allowWorkSemaphore.release(workingSystems);
-            workCompleteSemaphore.acquireUninterruptibly(workingSystems);
+            allowWorkBetweenUpdates.release();
         }
 
     }
@@ -146,6 +186,8 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                     Thread.onSpinWait();
                 }
             }
+            allowWorkBetweenUpdates.acquireUninterruptibly();
+            systemsStartedThisUpdate.incrementAndGet();
 
             double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
             lastUpdateTime = System.currentTimeMillis();
@@ -158,6 +200,8 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 workingSuccessfully = false;
                 waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, waveSystem.getName() + " caused exception.");
             }
+
+            allowWorkBetweenUpdates.release();
         }
 
     }

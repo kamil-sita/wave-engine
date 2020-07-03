@@ -2,14 +2,13 @@ package waveengine.library.systems;
 
 import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
-import waveengine.ecs.component.Semaphoring;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.library.objects.Clickable;
 import waveengine.library.WaveTables;
 
 public class ButtonStateChecker extends WaveSystem {
     @Override
-    protected void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
+    protected void update(double deltaTime) {
         int x = getInteractions().getMouseX();
         int y = getInteractions().getMouseY();
         boolean isPressed = getInteractions().isMousePressed();

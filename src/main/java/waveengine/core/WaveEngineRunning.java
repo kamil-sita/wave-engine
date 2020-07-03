@@ -52,7 +52,7 @@ public class WaveEngineRunning {
 
     public void setCurrentStage(Discriminator stage) {
         this.currentStage = stage;
-        getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.STAGE_CHANGED, stage);
+        getComponentManager().setTargetStage(stage);
     }
 
     public Discriminator getCurrentStage() {

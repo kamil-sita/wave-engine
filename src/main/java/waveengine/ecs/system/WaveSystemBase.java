@@ -4,7 +4,6 @@ import waveengine.Discriminator;
 import waveengine.core.Logger;
 import waveengine.core.WaveEngineRunning;
 import waveengine.ecs.component.ManagedTableGroup;
-import waveengine.ecs.component.Semaphoring;
 import waveengine.ecs.component.TableGroup;
 import waveengine.guiimplementation.Interactions;
 
@@ -27,7 +26,7 @@ public abstract class WaveSystemBase {
     }
 
     public final String getFullName() {
-        return getName() + " [" + getCreator() + "]";
+        return getName() + " [provider: " + getCreator() + "]";
     }
 
     public boolean hasName() {
@@ -49,7 +48,7 @@ public abstract class WaveSystemBase {
         return this;
     }
 
-    protected ManagedTableGroup getTablesFor(Discriminator... components) throws Semaphoring.TableNotOwnedException {
+    protected ManagedTableGroup getTablesFor(Discriminator... components) {
         iterationAcquiredResources++;
         if (iterationAcquiredResources > 1) {
             if (!iterationAcquiredResourcesWarningShown) {
@@ -67,24 +66,25 @@ public abstract class WaveSystemBase {
         return comp;
     }
 
-    protected ManagedTableGroup getTablesFor(Class<?>... someClass) throws Semaphoring.TableNotOwnedException {
+    protected ManagedTableGroup getTablesFor(Class<?>... someClass) {
         var discs = getWaveEngineRunning().getComponentManager().getDiscriminatorForClass(someClass);
         return getTablesFor(discs);
     }
 
-    protected <T> TableGroup.Table<T> getTableFor(Discriminator component, Class<T> classOfT) throws Semaphoring.TableNotOwnedException {
+    protected <T> TableGroup.Table<T> getTableFor(Discriminator component, Class<T> classOfT) {
         var comp = getTablesFor(component);
         return comp.getTable(component, classOfT);
     }
 
-    protected <T> TableGroup.Table<T> getTableFor(Class<T> classOfT) throws Semaphoring.TableNotOwnedException {
+    protected <T> TableGroup.Table<T> getTableFor(Class<T> classOfT) {
         var comp = getWaveEngineRunning().getComponentManager().getDiscriminatorForClass(classOfT);
         return getTableFor(comp, classOfT);
     }
 
     /**
      * Method that can be used to free resources acquired through getTablesFor method,
-     * before finishing the current iteration - useful if you
+     * before finishing the current iteration - useful if you get resources in multiple calls, or no longer need them
+     * and still need to do some work.
      */
     protected void freeComponents() {
         iterationAcquiredResources = 0;

@@ -4,17 +4,20 @@ import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
 import waveengine.WaveEngineParameters;
 import waveengine.core.WaveEngineSystemEvents;
-import waveengine.ecs.component.Semaphoring;
+import waveengine.ecs.entity.Entity;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.systems.GraphicalResourceManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Example {
     public static void main(String[] args) {
         var renderingSystem = new RenderingSystem() {
             @Override
-            public void update(WaveCanvas canvas, double deltaTime) throws Semaphoring.TableNotOwnedException {
+            public void update(WaveCanvas canvas, double deltaTime) {
                 var tables = getTablesFor(ComponentPosition.class, ComponentScale.class, ComponentGraphics.class);
                 var positionTable = tables.getTable(ComponentPosition.class);
                 var scaleTable = tables.getTable(ComponentScale.class);
@@ -65,7 +68,7 @@ public class Example {
         //position system
         wave.addSystem(DiscSystems.PHYSIC_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
-            public void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
+            public void update(double deltaTime) {
                 var physicsComponent = getTableFor(ComponentPosition.class);
                 physicsComponent.iterate(
                         (index, physObj) -> {
@@ -79,7 +82,7 @@ public class Example {
         //scale system - objects size change in time
         wave.addSystem(DiscSystems.SCALE_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             @Override
-            protected void update(double deltaTime) throws Semaphoring.TableNotOwnedException {
+            protected void update(double deltaTime) {
                 var scaleTable = getTableFor(ComponentScale.class);
                 scaleTable.iterate((integer, scaleObj) -> {
                     scaleObj.iterate(deltaTime);
@@ -90,21 +93,39 @@ public class Example {
         //shutdown listener is needed, since instead of closing, pressing close button sends message to notifier service
         wave.addListener(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, (cause, message) -> System.exit(0));
 
+        List<Entity> addedEntities = new ArrayList<>();
+
         wave.addSystem(DiscSystems.STAGE_CHANGING_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             double time = 0;
             int state = 0;
             @Override
             protected void update(double deltaTime) {
                 time += deltaTime;
-                if (state == 0 && time > 10) {
+                if (state == 0 && time > 4) {
                     time = 0;
                     getWaveEngineRunning().setCurrentStage(DiscStages.MAIN_LOOP1);
                     state = 1;
                 }
-                if (state == 1 && time > 2) {
+                if (state == 1 && time > 4) {
                     time = 0;
                     getWaveEngineRunning().setCurrentStage(DiscStages.MAIN_LOOP0);
                     state = 0;
+                    double random = Math.random();
+                    if (random > 0.95) {
+                        Entity entity = wave.getEntityBuilder()
+                                .oneStage(DiscStages.MAIN_LOOP1)
+                                .addToComponent(new ComponentPosition(), ComponentPosition.class)
+                                .addToComponent(new ComponentGraphics(), ComponentGraphics.class)
+                                .getEntity();
+                        addedEntities.add(entity);
+                    } else if (random < 0.05) {
+                        if (addedEntities.size() == 0) {
+                            return;
+                        }
+                        Entity entity = addedEntities.get(0);
+                        getWaveEngineRunning().getComponentManager().removeEntity(entity);
+                        addedEntities.remove(0);
+                    }
                 }
             }
         });

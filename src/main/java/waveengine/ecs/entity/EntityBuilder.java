@@ -42,9 +42,8 @@ public final class EntityBuilder {
             return this;
         }
 
-        public EntityBuilderWithEntity setEntity(Entity entity) {
-            this.entity = entity;
-            return this;
+        public Entity getEntity() {
+            return entity;
         }
     }
 

@@ -5,234 +5,209 @@ import waveengine.core.Logger;
 import waveengine.core.WaveEngineRunning;
 import waveengine.core.WaveEngineSystemEvents;
 import waveengine.ecs.entity.Entity;
-import waveengine.services.NotifyingService;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public class ComponentManager {
 
-    private Discriminator activeStage;
+    private final WaveEngineRunning waveEngineRunning;
 
-    private Map<Discriminator, HashMap<Integer, Object>> objectsPerComponent = new HashMap<>();
-    private Map<Discriminator, HashMap<Integer, Object>> activeObjectsPerComponent = new HashMap<>();
-    private Map<List<Discriminator>, TableGroup> activeObjectsPerComponents = new HashMap<>();
-    private List<Entity> entityList = new ArrayList<>();
-    private Set<Discriminator> components = new HashSet<>();
-    private WaveEngineRunning waveEngineRunning;
+    private Discriminator currentStage; //active stage until it might change after update() call
+    private Discriminator nextStage; //next stage that will be changed during update() call
 
+    //todo both entities and componentsPerEntity should contain the same sets. Can they be merged?
+    private final Set<Entity> entities = new HashSet<>(5000); //contains all entities in engine
+    private final Map<Entity, EntityComponents> componentsPerEntity = Collections.synchronizedMap(new HashMap<>(5000)); //contains all components in system, divided by entity and system
+
+    private final Set<Entity> activeEntities = new HashSet<>();
+
+    private final Set<Entity> addingSet = Collections.synchronizedSet(new HashSet<>()); //set with all entities that will be added in next iteration
+    private final Set<Entity> removingSet = new HashSet<>(); //set with all entities that will be removed in next iteration
+
+    private Map<Discriminator, Map<Integer, Object>> cacheForThisStage = new HashMap<>(); //todo optimize? Or too hard?
 
     public ComponentManager(WaveEngineRunning waveEngineRunning) {
-        waveEngineRunning.getNotifyingService().addListener(WaveEngineSystemEvents.STAGE_CHANGED, new NotifyingService.Notifier() {
-            @Override
-            public void notifyListener(Discriminator cause, Object message) {
-                setActiveStage((Discriminator) message);
-            }
-        });
-        semaphoring = new Semaphoring(waveEngineRunning);
         this.waveEngineRunning = waveEngineRunning;
     }
 
-    private ComponentManager setActiveStage(Discriminator activeStage) {
-        semaphoring.modificationLockObtain();
-        invalidateCache();
-        this.activeStage = activeStage;
-        semaphoring.modificationLockRelease();
+    private AtomicInteger resourcesHeld = new AtomicInteger(0);
+
+    public void update() {
+        //todo make sure no one has any resource
+        if (resourcesHeld.get() != 0) {
+            throw new IllegalStateException("No resources should be held");
+        }
+
+        boolean changed = false;
+
+        if (!addingSet.isEmpty() || !removingSet.isEmpty()) { //todo optimize?
+            changed = true;
+        }
+
+        //adding entities
+        for (Entity entity : addingSet) {
+            if (entity.isActive(currentStage)) {
+                activeEntities.add(entity);
+            }
+        }
+        entities.addAll(addingSet);
+
+        //removing entities
+        activeEntities.removeAll(removingSet);
+
+        for (Entity entity : removingSet) {
+            componentsPerEntity.remove(entity);
+        }
+        entities.removeAll(removingSet);
+
+
+        addingSet.clear();
+        removingSet.clear();
+
+        //change stage
+        if (this.nextStage != null) {
+            changed = true;
+            this.currentStage = nextStage;
+            nextStage = null;
+
+            rebuildActiveEntities();
+
+            waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.STAGE_CHANGED, currentStage);
+        }
+
+        if (changed) {
+            cacheForThisStage.clear();
+        }
+    }
+
+    private void rebuildActiveEntities() {
+        activeEntities.clear();
+
+        for (Entity entity : entities) {
+            if (entity.isActive(currentStage)) {
+                activeEntities.add(entity);
+            }
+        }
+
+    }
+
+    public ComponentManager setTargetStage(Discriminator nextStage) {
+        this.nextStage = nextStage;
         return this;
     }
 
-    private boolean needsToRebuildList = true;
+    public void addEntityToComponent(Entity entity, Class<?> clazz, Object component) {
+        addEntityToComponent(entity, getDiscriminatorForClass(clazz), component);
+    }
 
-    private Semaphoring semaphoring;
+    public void addEntityToComponent(Entity entity, Discriminator discriminator, Object component) {
+        //todo thread safe
+        addingSet.add(entity);
+        if (componentsPerEntity.containsKey(entity)) {
+            componentsPerEntity.get(entity).addComponent(discriminator, component);
+        } else {
+            EntityComponents entityComponents = new EntityComponents();
+            entityComponents.addComponent(discriminator, component);
+            componentsPerEntity.put(entity, entityComponents);
+        }
+    }
 
-    private Map<Discriminator, Semaphore> discriminatorSemaphoreMap = new ConcurrentHashMap<>();
+    public void removeEntity(Entity entity) {
+        removingSet.add(entity);
+    }
+
+    private Map<Discriminator, Semaphore> lockedTables = Collections.synchronizedMap(new HashMap<>()); //todo also probably too expensive (timely) of solution, like in EntityComponents.java
 
     /**
      * Method that locks given tables, and returns combination of those tables as ManagedTableGroup object.
      * @param selectedTables tables that are required.
      * @return ManagedTableGroup object with required tables.
      */
-    public ManagedTableGroup getTables(String owner, Discriminator... selectedTables) throws Semaphoring.TableNotOwnedException {
-        Semaphoring.TableNotOwnedException exception = null;
-        exception = semaphoring.exclusiveLockObtain(selectedTables, owner);
-        if (exception != null) {
-            throw exception;
-        }
-        var tables = lazyGetTables(owner, Arrays.asList(selectedTables));
+    public ManagedTableGroup getTables(String owner, Discriminator... selectedTables) {
+        //todo better threading
+        lockObtain(owner, selectedTables);
+        var tables = getTables(owner, Arrays.asList(selectedTables));
         return new ManagedTableGroup(
                 tables,
                 this,
-                () -> semaphoring.exclusiveLockRelease(selectedTables, owner));
+                () -> lockRelease(selectedTables));
     }
 
-    private synchronized TableGroup lazyGetTables(String owner, List<Discriminator> components) {
-        semaphoring.modificationLockObtain();
-
-        if (activeObjectsPerComponents.containsKey(components)) {
-            var retVal = activeObjectsPerComponents.get(components);
-            semaphoring.modificationLockRelease();
-            return retVal;
-        }
-
-        if (needsToRebuildList) {
-            rebuildActiveObjectsPerComponent();
-            needsToRebuildList = false;
-        }
-
-        for (var component : components) {
-            buildForSystem(component);
-        }
-
+    private TableGroup getTables(String owner, List<Discriminator> asList) { //todo lock should be obtained, so no reason to fear about racing
         var as = new ComponentContainerImpl(this);
-        for (var component : components) {
-            as.add(component, activeObjectsPerComponent.get(component));
-        }
-        activeObjectsPerComponents.put(components, as);
 
-        semaphoring.modificationLockRelease();
+        for (var component : asList) {
+            if (cacheForThisStage.getOrDefault(component, Map.of()).isEmpty()) {
+                Map<Integer, Object> objects = new HashMap<>();
+                for (Entity entity : activeEntities) {
+                    EntityComponents components = componentsPerEntity.get(entity);
+                    if (components.hasComponent(component)) {
+                        objects.put(entity.getId(), components.getComponent(component));
+                    }
+                }
+                cacheForThisStage.put(component, objects);
+            }
+            as.add(component, cacheForThisStage.get(component));
+        }
         return as;
     }
 
-    private void rebuildActiveObjectsPerComponent() {
-        activeObjectsPerComponent = new HashMap<>();
-        for (var component : components) {
-            HashMap<Integer, Object> activeObjectsForThisComponent = new HashMap<>();
-            var objectsForThisComponent = objectsPerComponent.get(component);
+    private Semaphore workaroundsemaphore = new Semaphore(1);
 
-            for (var entry : objectsForThisComponent.entrySet()) {
-                var id = entry.getKey();
+    private void lockObtain(String owner, Discriminator... selectedTables) {
+        //todo optimizations
+        List<Discriminator> sortedDiscriminators = new ArrayList<>(Arrays.asList(selectedTables));
 
-                if (entityList.get(id).isActive(activeStage)) {
-                    activeObjectsForThisComponent.put(id, entry.getValue());
-                }
+        //
+        sortedDiscriminators.sort(Comparator.comparingInt(Discriminator::hashCode));
+
+        for (Discriminator discriminator : sortedDiscriminators) {
+            workaroundsemaphore.acquireUninterruptibly();
+            if (!lockedTables.containsKey(discriminator)) {
+                lockedTables.put(discriminator, new Semaphore(1));
             }
-            activeObjectsPerComponent.put(component, activeObjectsForThisComponent);
+            workaroundsemaphore.release();
+            lockedTables.get(discriminator).acquireUninterruptibly();
+            resourcesHeld.incrementAndGet();
+        }
+
+    }
+
+    private void lockRelease(Discriminator... selectedTables) {
+        for (Discriminator discriminator : selectedTables) {
+            lockedTables.get(discriminator).release();
+            resourcesHeld.decrementAndGet();
         }
     }
 
-
-    private void invalidateCacheIfSystemIsActive(Entity entity) {
-        if (entity.isActive(activeStage)) {
-            invalidateCache();
-        }
-    }
-
-    private void invalidateCache() {
-        activeObjectsPerComponent = new HashMap<>();
-        activeObjectsPerComponents = new HashMap<>();
-        needsToRebuildList = true;
-    }
-
-    private void buildForSystem(Discriminator discriminator) {
-        if (activeObjectsPerComponent.containsKey(discriminator)) return;
-
-        HashMap<Integer, Object> map = new HashMap<>();
-        activeObjectsPerComponent.put(discriminator, map);
-        var objectForSystem = objectsPerComponent.getOrDefault(discriminator, new HashMap<>());
-        for (var object : objectForSystem.entrySet()) {
-            int id = object.getKey();
-            if (entityList.get(id).isActive(discriminator)) {
-                map.put(id, object.getValue());
-            }
-        }
-    }
-
-    public void addEntityToComponent(Entity entity, Class<?> clazz, Object object) {
-        addEntityToComponent(entity, getDiscriminatorForClass(clazz), object);
-    }
-
-    public void addEntityToComponent(Entity entity, Discriminator component, Object object) {
-        semaphoring.modificationLockObtain();
-
-        addEntity(entity);
-        if (!objectsPerComponent.containsKey(component)) {
-            objectsPerComponent.put(component, new HashMap<>());
-        }
-        var systemObjects = objectsPerComponent.get(component);
-        systemObjects.put(entity.getId(), object);
-        components.add(component);
-
-        invalidateCacheIfSystemIsActive(entity);
-
-        semaphoring.modificationLockRelease();
-    }
-
-    private void removeEntity(Entity entity) {
-        semaphoring.modificationLockObtain();
-        invalidateCacheIfSystemIsActive(entity);
-        entityList.set(entity.getId(), null);
-
-        semaphoring.modificationLockRelease();
-    }
-
-    private void addEntity(Entity entity) {
-        if (entityList.size() == entity.getId()) {
-            entityList.add(entity);
-            return;
-        }
-        if (entityList.size() > entity.getId()) {
-            return;
-        }
-        Logger.getLogger().logWarning("Warning: adding entity of id: " + entity.getId() + ", when there is a gap (entitylist has " + entityList.size() + ") elements");
-        int gapSize = entity.getId() - entityList.size() - 1;
-        for (int i = 0; i < gapSize; i++) {
-            entityList.add(null);
-        }
-        entityList.add(entity);
-    }
 
     private final Map<Class<?>, Discriminator> discriminatorForClass = Collections.synchronizedMap(new HashMap<>());
 
     public Discriminator[] getDiscriminatorForClass(Class<?>[] someClass) {
-        Discriminator[] discriminators = new Discriminator[someClass.length]; //todo possible optimization
-
+        Discriminator[] discriminators = new Discriminator[someClass.length];
         for (int i = 0; i < someClass.length; i++) {
-            Class<?> clazz = someClass[i];
-
-            if (discriminatorForClass.containsKey(clazz)) {
-                discriminators[i] = discriminatorForClass.get(clazz);
-                continue;
-            }
-
-            semaphoring.discriminatorForClassAcquire();
-
-            if (!discriminatorForClass.containsKey(clazz)) {
-                discriminatorForClass.put(clazz, new Discriminator() {
-                });
-            }
-            discriminators[i] = discriminatorForClass.get(clazz);
-
-            semaphoring.discriminatorForClassRelease();
+            discriminators[i] = getDiscriminatorForClass(someClass[i]);
         }
         return discriminators;
     }
 
     public <T> Discriminator getDiscriminatorForClass(Class<T> classOfT, String suggestedName) {
-        if (discriminatorForClass.containsKey(classOfT)) {
-            return discriminatorForClass.get(classOfT);
-        }
-
-        semaphoring.discriminatorForClassAcquire();
-        if (!discriminatorForClass.containsKey(classOfT)) {
-            if (suggestedName == null) {
-                discriminatorForClass.put(classOfT, new Discriminator() {
-                    @Override
-                    public String toString() {
-                        return classOfT.getName();
-                    }
-                });
-            } else {
-                discriminatorForClass.put(classOfT, new Discriminator() {
-                    @Override
-                    public String toString() {
-                        return suggestedName;
-                    }
-                });
+        discriminatorForClass.computeIfAbsent(classOfT, new Function<Class<?>, Discriminator>() {
+            @Override
+            public Discriminator apply(Class<?> aClass) {
+                if (suggestedName == null) {
+                    Logger.getLogger().log("Generating Discriminator for class: " + classOfT + ", got: " + aClass.getName());
+                    return Discriminator.fromString(aClass.getName());
+                } else {
+                    Logger.getLogger().log("Using suggested name of Discriminator for class: " + classOfT + ", got: " + suggestedName);
+                    return Discriminator.fromString(suggestedName);
+                }
             }
-        }
-        semaphoring.discriminatorForClassRelease();
+        });
+
         return discriminatorForClass.get(classOfT);
     }
 

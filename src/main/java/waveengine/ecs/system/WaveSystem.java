@@ -23,7 +23,7 @@ public abstract class WaveSystem extends WaveSystemBase {
         try {
             update(deltaTime);
         } catch (Exception e) {
-            Logger.getLogger().logError(e.getMessage());
+            Logger.getLogger().logError(getName() + ": " + e.toString() + ", " + e.getMessage());
         }
         freeComponents();
     }

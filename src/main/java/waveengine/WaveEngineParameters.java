@@ -22,8 +22,4 @@ public final class WaveEngineParameters {
     public boolean singleThreaded() {
         return false;
     }
-
-    public long acquireResourceRequestTimeMiliseconds() {
-        return 10;
-    }
 }

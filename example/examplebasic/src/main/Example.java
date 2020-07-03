@@ -103,13 +103,15 @@ public class Example {
                 time += deltaTime;
                 if (state == 0 && time > 4) {
                     time = 0;
-                    getWaveEngineRunning().setCurrentStage(DiscStages.MAIN_LOOP1);
+                    getWaveEngineRunning().setNextStage(DiscStages.MAIN_LOOP1);
                     state = 1;
                 }
                 if (state == 1 && time > 4) {
                     time = 0;
-                    getWaveEngineRunning().setCurrentStage(DiscStages.MAIN_LOOP0);
+                    getWaveEngineRunning().setNextStage(DiscStages.MAIN_LOOP0);
                     state = 0;
+                }
+                if (state == 1) {
                     double random = Math.random();
                     if (random > 0.95) {
                         Entity entity = wave.getEntityBuilder()
@@ -119,12 +121,11 @@ public class Example {
                                 .getEntity();
                         addedEntities.add(entity);
                     } else if (random < 0.05) {
-                        if (addedEntities.size() == 0) {
-                            return;
+                        if (addedEntities.size() != 0) {
+                            Entity entity = addedEntities.get(0);
+                            getWaveEngineRunning().getComponentManager().removeEntity(entity);
+                            addedEntities.remove(0);
                         }
-                        Entity entity = addedEntities.get(0);
-                        getWaveEngineRunning().getComponentManager().removeEntity(entity);
-                        addedEntities.remove(0);
                     }
                 }
             }

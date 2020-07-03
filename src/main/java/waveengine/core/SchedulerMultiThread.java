@@ -26,7 +26,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
         synchronizedUpdaterThread = new Thread(() -> {
             int mySystemCount = systemCount;
-            System.out.println("I know about " + mySystemCount + " systems");
             while (true) {
                 waveEngineRunning.getComponentManager().update();
                 systemsStartedThisUpdate.set(0);
@@ -35,6 +34,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                     Thread.onSpinWait();
                 }
                 allowWorkBetweenUpdates.acquireUninterruptibly(mySystemCount);
+                allowNext.release(mySystemCount);
                 if (systemCount != mySystemCount) {
                     Logger.getLogger().logError("System count changed unexpectedly");
                     return;
@@ -53,6 +53,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
     private final Semaphore allowWorkBeforeFrame = new Semaphore(0);
     private final Semaphore allowWorkAfterFrame = new Semaphore(0);
+    private final Semaphore allowNext = new Semaphore(0);
 
     private int systemCount;
     private final Semaphore allowWorkBetweenUpdates = new Semaphore(0);
@@ -102,6 +103,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                     }
                     allowWorkBetweenUpdates.release();
                     allowWorkAfterFrame.release();
+                    allowNext.acquireUninterruptibly();
                 }
             });
             systemCount++;
@@ -166,6 +168,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
             waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
 
             allowWorkBetweenUpdates.release();
+            allowNext.acquireUninterruptibly();
         }
 
     }
@@ -202,6 +205,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
             }
 
             allowWorkBetweenUpdates.release();
+            allowNext.acquireUninterruptibly();
         }
 
     }

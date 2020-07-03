@@ -36,7 +36,6 @@ public class ComponentManager {
     private AtomicInteger resourcesHeld = new AtomicInteger(0);
 
     public void update() {
-        //todo make sure no one has any resource
         if (resourcesHeld.get() != 0) {
             throw new IllegalStateException("No resources should be held");
         }
@@ -105,6 +104,10 @@ public class ComponentManager {
 
     public void addEntityToComponent(Entity entity, Discriminator discriminator, Object component) {
         //todo thread safe
+        if (!lockedTables.containsKey(discriminator)) {
+            lockedTables.put(discriminator, new Semaphore(1));
+        }
+
         addingSet.add(entity);
         if (componentsPerEntity.containsKey(entity)) {
             componentsPerEntity.get(entity).addComponent(discriminator, component);
@@ -155,8 +158,6 @@ public class ComponentManager {
         return as;
     }
 
-    private Semaphore workaroundsemaphore = new Semaphore(1);
-
     private void lockObtain(String owner, Discriminator... selectedTables) {
         //todo optimizations
         List<Discriminator> sortedDiscriminators = new ArrayList<>(Arrays.asList(selectedTables));
@@ -165,11 +166,6 @@ public class ComponentManager {
         sortedDiscriminators.sort(Comparator.comparingInt(Discriminator::hashCode));
 
         for (Discriminator discriminator : sortedDiscriminators) {
-            workaroundsemaphore.acquireUninterruptibly();
-            if (!lockedTables.containsKey(discriminator)) {
-                lockedTables.put(discriminator, new Semaphore(1));
-            }
-            workaroundsemaphore.release();
             lockedTables.get(discriminator).acquireUninterruptibly();
             resourcesHeld.incrementAndGet();
         }
@@ -213,6 +209,10 @@ public class ComponentManager {
 
     public <T> Discriminator getDiscriminatorForClass(Class<T> classOfT) {
         return getDiscriminatorForClass(classOfT, null);
+    }
+
+    public Discriminator getCurrentStage() {
+        return currentStage;
     }
 
     /**

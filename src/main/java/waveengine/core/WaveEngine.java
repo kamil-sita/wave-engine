@@ -112,7 +112,7 @@ public final class WaveEngine {
     }
 
     public void setInitialStage(Discriminator stage) {
-        waveEngineRunning.setCurrentStage(stage);
+        waveEngineRunning.setNextStage(stage);
     }
 
     @Deprecated

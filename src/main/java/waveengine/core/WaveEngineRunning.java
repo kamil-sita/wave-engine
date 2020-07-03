@@ -50,13 +50,12 @@ public class WaveEngineRunning {
         return systems;
     }
 
-    public void setCurrentStage(Discriminator stage) {
-        this.currentStage = stage;
+    public void setNextStage(Discriminator stage) {
         getComponentManager().setTargetStage(stage);
     }
 
     public Discriminator getCurrentStage() {
-        return currentStage;
+        return getComponentManager().getCurrentStage();
     }
 
     WaveEngineRunning setRenderingSystem(RenderingSystem renderingSystem) {

@@ -4,25 +4,39 @@ import waveengine.Discriminator;
 import waveengine.core.WaveEngine;
 import waveengine.core.WaveEngineSystemEvents;
 import waveengine.core.UpdatePolicy;
+import waveengine.ecs.entity.EntityActiveOneStage;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.GraphicalObject;
 import waveengine.guiimplementation.ImageGraphicalObject;
 import waveengine.threading.AssistedReverseSemaphore;
+import waveengine.util.Pair;
 
+import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class GraphicalResourceManager extends WaveSystem {
 
-    private HashMap<ResourceLocation, ExpirableResource<GraphicalObject>> managedObjects = new HashMap<>();
-    private AssistedReverseSemaphore<ExpirableResource<GraphicalObject>> access = new AssistedReverseSemaphore<>();
 
+    private Map<ResourceLocation, GraphicalObject> loadedObjects = new HashMap<>();
+    private List<Pair<Discriminator, ResourceLocation>> resources = new ArrayList<>();
+    private Discriminator actualStage;
 
     public static void addSelf(WaveEngine waveEngine) {
         GraphicalResourceManager graphicalResourceManager = new GraphicalResourceManager();
         graphicalResourceManager.setName("Graphical Resource Manager");
         waveEngine.addSystem(UpdatePolicy.NEVER, graphicalResourceManager, GraphicalResourceManager.class);
-        waveEngine.addListener(WaveEngineSystemEvents.LOW_ON_MEMORY, graphicalResourceManager::freeMemory);
+        waveEngine.addListener(WaveEngineSystemEvents.STAGE_CHANGED, graphicalResourceManager::stageChange);
+    }
+
+    public void addResource(Discriminator stage, ResourceLocation resourceLocation) {
+        resources.add(Pair.of(stage, resourceLocation));
+        if (actualStage.equals(stage)) {
+            loadResource(resourceLocation);
+        }
     }
 
     @Override
@@ -35,29 +49,28 @@ public class GraphicalResourceManager extends WaveSystem {
         //
     }
 
-    private void freeMemory(Discriminator cause, Object message) {
-        access.blockAwaitDo(() -> {
-            //todo - this block is in foreach, which will cause errors; automatic freeing of memory is disabled by default
-            for (var expirableResourceSet : managedObjects.entrySet()) {
-                var expirableResource = expirableResourceSet.getValue();
-                if (expirableResource.expireIfPossible()) {
-                    managedObjects.remove(expirableResourceSet.getKey());
-                }
+    private void stageChange(Discriminator cause, Object message) {
+        for (ResourceLocation resourceLocation : loadedObjects.keySet()) {
+            loadedObjects.get(resourceLocation).dispose();
+        }
+        loadedObjects.clear();
+
+        Discriminator stage = (Discriminator) message;
+        actualStage = stage;
+
+        for (Pair<Discriminator, ResourceLocation> resource : resources) {
+            if (resource.getT().equals(stage)) {
+                loadedObjects.put(resource.getU(), ImageGraphicalObject.load(resource.getU()));
             }
-        });
+        }
     }
 
-    public ExpirableResource<GraphicalObject> getResourceOrLoad(ResourceLocation location) {
-        return access.doAwaitIfNotPossibleWithReturn(() -> {
-            if (managedObjects.containsKey(location)) {
-                return managedObjects.get(location);
-            } else {
-                var image = ImageGraphicalObject.load(location);
-                var managedImage = new ExpirableResource<GraphicalObject>(image);
-                managedObjects.put(location, managedImage);
-                return managedImage;
-            }
-        });
+    private void loadResource(ResourceLocation location) {
+        loadedObjects.put(location, ImageGraphicalObject.load(location));
+    }
+
+    public GraphicalObject getResource(ResourceLocation location) {
+        return loadedObjects.get(location);
     }
 
     @Override

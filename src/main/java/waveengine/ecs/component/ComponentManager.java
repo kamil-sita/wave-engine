@@ -46,25 +46,27 @@ public class ComponentManager {
             changed = true;
         }
 
-        //adding entities
-        for (Entity entity : addingSet) {
-            if (entity.isActive(currentStage)) {
-                activeEntities.add(entity);
+        if (!addingSet.isEmpty()) {
+            //adding entities
+            for (Entity entity : addingSet) {
+                if (entity.isActive(currentStage)) {
+                    activeEntities.add(entity);
+                }
             }
+            entities.addAll(addingSet);
+            addingSet.clear();
         }
-        entities.addAll(addingSet);
 
-        //removing entities
-        activeEntities.removeAll(removingSet);
+        if (!removingSet.isEmpty()) {
+            //removing entities
+            activeEntities.removeAll(removingSet);
 
-        for (Entity entity : removingSet) {
-            componentsPerEntity.remove(entity);
+            for (Entity entity : removingSet) {
+                componentsPerEntity.remove(entity);
+            }
+            entities.removeAll(removingSet);
+            removingSet.clear();
         }
-        entities.removeAll(removingSet);
-
-
-        addingSet.clear();
-        removingSet.clear();
 
         //change stage
         if (this.nextStage != null) {
@@ -74,7 +76,7 @@ public class ComponentManager {
 
             rebuildActiveEntities();
 
-            waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.STAGE_CHANGED, currentStage);
+            waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.STAGE_CHANGED, currentStage);
         }
 
         if (changed) {
@@ -102,18 +104,19 @@ public class ComponentManager {
         addEntityToComponent(entity, getDiscriminatorForClass(clazz), component);
     }
 
-    public void addEntityToComponent(Entity entity, Discriminator discriminator, Object component) {
+    public void addEntityToComponent(Entity entity, Discriminator table, Object component) {
         //todo thread safe
-        if (!lockedTables.containsKey(discriminator)) {
-            lockedTables.put(discriminator, new Semaphore(1));
+        if (!lockedTables.containsKey(table)) {
+            Logger.getLogger().log("Added semaphore for table: " + table);
+            lockedTables.put(table, new Semaphore(1));
         }
 
         addingSet.add(entity);
         if (componentsPerEntity.containsKey(entity)) {
-            componentsPerEntity.get(entity).addComponent(discriminator, component);
+            componentsPerEntity.get(entity).addComponent(table, component);
         } else {
             EntityComponents entityComponents = new EntityComponents();
-            entityComponents.addComponent(discriminator, component);
+            entityComponents.addComponent(table, component);
             componentsPerEntity.put(entity, entityComponents);
         }
     }
@@ -131,12 +134,12 @@ public class ComponentManager {
      */
     public ManagedTableGroup getTables(String owner, Discriminator... selectedTables) {
         //todo better threading
-        lockObtain(owner, selectedTables);
+        List<Semaphore> semaphores = lockObtain(owner, selectedTables);
         var tables = getTables(owner, Arrays.asList(selectedTables));
         return new ManagedTableGroup(
                 tables,
                 this,
-                () -> lockRelease(selectedTables));
+                () -> lockRelease(semaphores));
     }
 
     private TableGroup getTables(String owner, List<Discriminator> asList) { //todo lock should be obtained, so no reason to fear about racing
@@ -158,23 +161,32 @@ public class ComponentManager {
         return as;
     }
 
-    private void lockObtain(String owner, Discriminator... selectedTables) {
+    private List<Semaphore> lockObtain(String owner, Discriminator... selectedTables) {
         //todo optimizations
         List<Discriminator> sortedDiscriminators = new ArrayList<>(Arrays.asList(selectedTables));
+        List<Semaphore> acquiredSemaphores = new ArrayList<>();
 
         //
         sortedDiscriminators.sort(Comparator.comparingInt(Discriminator::hashCode));
 
         for (Discriminator discriminator : sortedDiscriminators) {
-            lockedTables.get(discriminator).acquireUninterruptibly();
+            Semaphore semaphore = lockedTables.get(discriminator);
+
+            if (semaphore == null) {
+                semaphore = new Semaphore(1);
+                lockedTables.put(discriminator, semaphore);
+            }
+
+            semaphore.acquireUninterruptibly();
+            acquiredSemaphores.add(semaphore);
             resourcesHeld.incrementAndGet();
         }
-
+        return acquiredSemaphores;
     }
 
-    private void lockRelease(Discriminator... selectedTables) {
-        for (Discriminator discriminator : selectedTables) {
-            lockedTables.get(discriminator).release();
+    private void lockRelease(List<Semaphore> selectedTables) {
+        for (Semaphore semaphore : selectedTables) {
+            semaphore.release();
             resourcesHeld.decrementAndGet();
         }
     }

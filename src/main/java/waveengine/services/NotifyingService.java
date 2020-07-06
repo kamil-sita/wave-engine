@@ -22,20 +22,17 @@ public class NotifyingService {
         listenersForDiscriminator.add(notifier);
     }
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(1);
 
-    public void asyncNotifyListeners(Discriminator cause, Object message) {
-        executorService.submit(() -> {
-            if (cause instanceof WaveEngineSystemEvents) {
-                Logger.getLogger().logInfo("System Event: " + ((WaveEngineSystemEvents) cause).name() + ", " + message);
-            }
+    public void notifyListeners(Discriminator cause, Object message) {
+        if (cause instanceof WaveEngineSystemEvents) {
+            Logger.getLogger().logInfo("System Event: " + ((WaveEngineSystemEvents) cause).name() + ", " + message);
+        }
 
-            if (listeners.containsKey(cause)) {
-                for (var notifier : listeners.get(cause)) {
-                    notifier.notifyListener(cause, message);
-                }
+        if (listeners.containsKey(cause)) {
+            for (var notifier : listeners.get(cause)) {
+                notifier.notifyListener(cause, message);
             }
-        });
+        }
     }
 
     public void removeListener(Discriminator discriminator, Notifier notifier) {

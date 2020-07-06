@@ -15,18 +15,21 @@ import java.util.List;
 
 public class Example {
     public static void main(String[] args) {
+
         var renderingSystem = new RenderingSystem() {
             @Override
             public void update(WaveCanvas canvas, double deltaTime) {
-                System.out.println(1/deltaTime);
                 var tables = getTablesFor(ComponentPosition.class, ComponentScale.class, ComponentGraphics.class);
                 var positionTable = tables.getTable(ComponentPosition.class);
                 var scaleTable = tables.getTable(ComponentScale.class);
+                var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
+
+                graphicalResourceManager.addResource(DiscStages.MAIN_LOOP0, Resource.TEST_RESOURCE);
+                graphicalResourceManager.addResource(DiscStages.MAIN_LOOP1, Resource.TEST_RESOURCE);
+
                 tables.getTable(ComponentGraphics.class).iterate(
                         (index, graphObj) -> {
-
-                            var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
-                            var res = graphicalResourceManager.getResourceOrLoad(Resource.TEST_RESOURCE);
+                            var res = graphicalResourceManager.getResource(Resource.TEST_RESOURCE);
 
                             var parameters = graphObj.getParameters();
                             var position = positionTable.get(index);
@@ -40,7 +43,7 @@ public class Example {
                                 parameters.setScale((float) optionalScale.getScale());
                             }
 
-                            canvas.render(res.getResource(), parameters);
+                            canvas.render(res, parameters);
                         });
                 freeComponents(); //optional - will cause tables to be opened to other systems faster, if there is still some work done on things other than tables
             }
@@ -95,6 +98,7 @@ public class Example {
         wave.addListener(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, (cause, message) -> System.exit(0));
 
         List<Entity> addedEntities = new ArrayList<>();
+
 
         wave.addSystem(DiscSystems.STAGE_CHANGING_SYSTEM, UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
             double time = 0;

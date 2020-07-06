@@ -26,10 +26,11 @@ public class Example {
             public void update(WaveCanvas canvas, double deltaTime) {
                 var tables = getTablesFor(Tables.GRAPHICS, Tables.PHYSICAL_ATTRIBUTES_TABLE);
                 var positionTable = tables.getTable(Tables.PHYSICAL_ATTRIBUTES_TABLE, PhysicalAttributes.class);
+                var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
+                graphicalResourceManager.addResource(Stages.MAIN_STAGE, Resource.TEST_RESOURCE);
                 tables.getTable(Tables.GRAPHICS, GraphicalObject.class).iterate(
                         (index, graphObj) -> {
-                            var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
-                            var res = graphicalResourceManager.getResourceOrLoad(Resource.TEST_RESOURCE);
+                            var res = graphicalResourceManager.getResource(Resource.TEST_RESOURCE);
 
                             var parameters = graphObj.getParameters();
                             var position = positionTable.get(index);
@@ -37,7 +38,7 @@ public class Example {
                             parameters.setX(position.x);
                             parameters.setY(position.y);
 
-                            canvas.render(res.getResource(), parameters);
+                            canvas.render(res, parameters);
                         });
                 Parameters parameters = new Parameters(400, 200);
                 canvas.render(new ShadedRectangleGraphicalObject(Color.GREEN, Color.BLACK, 150, 150), parameters);

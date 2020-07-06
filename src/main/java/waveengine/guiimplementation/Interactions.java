@@ -112,7 +112,7 @@ public class Interactions {
 
         @Override
         public void windowClosing(WindowEvent e) {
-            waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, "WINDOW CLOSE REQUEST SENT BY GUI");
+            waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, "WINDOW CLOSE REQUEST SENT BY GUI");
         }
 
         @Override

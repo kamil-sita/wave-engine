@@ -13,14 +13,12 @@ public final class WaveEngineParameters {
         return true;
     }
 
-    public boolean useMemoryFreeingService() {return false;}
-
     public boolean useRepaint() {
         return true;
     }
 
     public boolean singleThreaded() {
-        return false;
+        return true;
     }
 
     /**

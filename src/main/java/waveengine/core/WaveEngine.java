@@ -43,8 +43,6 @@ public final class WaveEngine {
         Logger.getLogger().logInfo("Setting properties");
         System.setProperty("sun.java2d.translaccel", "True");
         System.setProperty("sun.java2d.opengl", "True");
-        Logger.getLogger().logInfo("Configuring self services");
-        configureSelfServices();
         Logger.getLogger().logInfo("Launching");
         waveEngineRunning.launch();
     }
@@ -118,39 +116,6 @@ public final class WaveEngine {
     @Deprecated
     public WaveEngineRunning getWaveEngineRunning() {
         return waveEngineRunning;
-    }
-
-    private void configureSelfServices() {
-        //checking memory service
-        if (waveEngineParameters.useMemoryFreeingService()) {
-            addSystem(
-                    WaveCoreSystemDiscriminator.MEMORY_CHECKER_SYSTEM,
-                    UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {
-                        double timeSinceFreeAttempt = 0;
-
-                        @Override
-                        public void update(double deltaTime) {
-                            timeSinceFreeAttempt += deltaTime;
-                            if (lessMemoryThanNeeded()) {
-                                if (timeSinceFreeAttempt > 5) {
-                                    waveEngineRunning.getNotifyingService().asyncNotifyListeners(
-                                            WaveEngineSystemEvents.LOW_ON_MEMORY,
-                                            "PROGRAM HAS ONLY FREE " + Runtime.getRuntime().freeMemory()/(1024*1024) + " MEMORY OUT OF MAX " + Runtime.getRuntime().maxMemory()/(1024*1024)
-                                    );
-                                    timeSinceFreeAttempt = 0;
-                                }
-                            }
-
-                        }
-
-                        private boolean lessMemoryThanNeeded() {
-                            return (1.0 * Runtime.getRuntime().freeMemory())/(Runtime.getRuntime().maxMemory()) < 0.99;
-                        }
-                    }
-            );
-        }
-
-        //
     }
 
     public EntityBuilder getEntityBuilder() {

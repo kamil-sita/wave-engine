@@ -93,7 +93,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                         Logger.getLogger().logError("Encountered exception with system: " + system.getName() + ". Exception: " + e.getMessage());
                         e.printStackTrace();
                         workingSuccessfully = false;
-                        waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, system.getName() + " caused exception.");
+                        waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, system.getName() + " caused exception.");
                     }
                     workFinishedBetweenUpdates.release();
                     allowWorkAfterFrame.release();
@@ -193,7 +193,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 Logger.getLogger().logError("Encountered exception with system: " + waveSystem.getName() + ". Exception: " + e.getMessage());
                 e.printStackTrace();
                 workingSuccessfully = false;
-                waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, waveSystem.getName() + " caused exception.");
+                waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, waveSystem.getName() + " caused exception.");
             }
 
             workFinishedBetweenUpdates.release();

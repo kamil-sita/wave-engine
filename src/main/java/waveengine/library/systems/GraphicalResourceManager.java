@@ -50,19 +50,37 @@ public class GraphicalResourceManager extends WaveSystem {
     }
 
     private void stageChange(Discriminator cause, Object message) {
-        for (ResourceLocation resourceLocation : loadedObjects.keySet()) {
-            loadedObjects.get(resourceLocation).dispose();
-        }
-        loadedObjects.clear();
-
         Discriminator stage = (Discriminator) message;
+
         actualStage = stage;
+
+        ArrayList<ResourceLocation> resourcesToLoad = new ArrayList<>();
 
         for (Pair<Discriminator, ResourceLocation> resource : resources) {
             if (resource.getT().equals(stage)) {
-                loadedObjects.put(resource.getU(), ImageGraphicalObject.load(resource.getU()));
+                resourcesToLoad.add(resource.getU());
             }
         }
+
+        List<ResourceLocation> toRemove = new ArrayList<>();
+
+        for (ResourceLocation resourceLocation : loadedObjects.keySet()) {
+            if (!resourcesToLoad.contains(resourceLocation)) {
+                loadedObjects.get(resourceLocation).dispose();
+                toRemove.add(resourceLocation);
+            }
+        }
+
+        for (ResourceLocation resourceLocation : toRemove) {
+            loadedObjects.remove(resourceLocation);
+        }
+
+        for (ResourceLocation resourceLocation : resourcesToLoad) {
+            if (!loadedObjects.containsKey(resourceLocation)) {
+                loadedObjects.put(resourceLocation, ImageGraphicalObject.load(resourceLocation));
+            }
+        }
+
     }
 
     private void loadResource(ResourceLocation location) {

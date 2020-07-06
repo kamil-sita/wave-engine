@@ -18,6 +18,7 @@ public class Example {
         var renderingSystem = new RenderingSystem() {
             @Override
             public void update(WaveCanvas canvas, double deltaTime) {
+                System.out.println(1/deltaTime);
                 var tables = getTablesFor(ComponentPosition.class, ComponentScale.class, ComponentGraphics.class);
                 var positionTable = tables.getTable(ComponentPosition.class);
                 var scaleTable = tables.getTable(ComponentScale.class);

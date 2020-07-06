@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulerMultiThread implements SchedulerImplementation {
 
@@ -28,12 +27,8 @@ public class SchedulerMultiThread implements SchedulerImplementation {
             int mySystemCount = systemCount;
             while (true) {
                 waveEngineRunning.getComponentManager().update();
-                systemsStartedThisUpdate.set(0);
                 allowWorkBetweenUpdates.release(mySystemCount);
-                while (systemsStartedThisUpdate.get() != mySystemCount) {
-                    Thread.onSpinWait();
-                }
-                allowWorkBetweenUpdates.acquireUninterruptibly(mySystemCount);
+                workFinishedBetweenUpdates.acquireUninterruptibly(mySystemCount);
                 allowNext.release(mySystemCount);
                 if (systemCount != mySystemCount) {
                     Logger.getLogger().logError("System count changed unexpectedly");
@@ -43,7 +38,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
         }, "Wave Synchronized Multi Threaded Scheduler Update Thread");
     }
 
-    private final AtomicInteger systemsStartedThisUpdate = new AtomicInteger(0);
 
     private final WaveEngineRunning waveEngineRunning;
     private final Thread graphicalThread;
@@ -57,6 +51,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
     private int systemCount;
     private final Semaphore allowWorkBetweenUpdates = new Semaphore(0);
+    private final Semaphore workFinishedBetweenUpdates = new Semaphore(0);
 
     @Override
     public void start() {
@@ -90,7 +85,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 while (workingSuccessfully) {
                     allowWorkBeforeFrame.acquireUninterruptibly();
                     allowWorkBetweenUpdates.acquireUninterruptibly();
-                    systemsStartedThisUpdate.incrementAndGet();
                     double delta = (System.currentTimeMillis() - lastUpdateTime)/1000.0;
                     lastUpdateTime = System.currentTimeMillis();
                     try {
@@ -101,7 +95,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                         workingSuccessfully = false;
                         waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, system.getName() + " caused exception.");
                     }
-                    allowWorkBetweenUpdates.release();
+                    workFinishedBetweenUpdates.release();
                     allowWorkAfterFrame.release();
                     allowNext.acquireUninterruptibly();
                 }
@@ -156,7 +150,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 }
             }
             allowWorkBetweenUpdates.acquireUninterruptibly();
-            systemsStartedThisUpdate.incrementAndGet();
 
             double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
             lastUpdateTime = System.currentTimeMillis();
@@ -167,7 +160,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
             waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
 
-            allowWorkBetweenUpdates.release();
+            workFinishedBetweenUpdates.release();
             allowNext.acquireUninterruptibly();
         }
 
@@ -190,7 +183,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 }
             }
             allowWorkBetweenUpdates.acquireUninterruptibly();
-            systemsStartedThisUpdate.incrementAndGet();
 
             double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
             lastUpdateTime = System.currentTimeMillis();
@@ -204,7 +196,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 waveEngineRunning.getNotifyingService().asyncNotifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, waveSystem.getName() + " caused exception.");
             }
 
-            allowWorkBetweenUpdates.release();
+            workFinishedBetweenUpdates.release();
             allowNext.acquireUninterruptibly();
         }
 

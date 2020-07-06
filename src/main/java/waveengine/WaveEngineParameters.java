@@ -22,4 +22,11 @@ public final class WaveEngineParameters {
     public boolean singleThreaded() {
         return false;
     }
+
+    /**
+     * Number of layers for renderer. If default, you can also use provided constants for help.
+     */
+    public int layerCount() {
+        return 5;
+    }
 }

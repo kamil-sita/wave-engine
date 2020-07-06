@@ -33,7 +33,7 @@ public final class GuiImplementation {
             var runtimeParameters = waveEngineRunning.getWaveEngineRuntimeSettings();
             graphics.fillRect(0, 0, runtimeParameters.width(), runtimeParameters.height());
         }
-        var waveCanvas = new WaveCanvas(graphics);
+        var waveCanvas = new WaveCanvas(graphics, waveEngineRunning);
         waveEngineRunning.getRenderingSystem().updateAndRelease(waveCanvas, delta);
         graphics.dispose();
         bufferStrategy.show();

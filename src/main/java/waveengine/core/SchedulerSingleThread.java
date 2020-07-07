@@ -10,6 +10,7 @@ public class SchedulerSingleThread implements SchedulerImplementation {
     private final WaveEngineRunning waveEngineRunning;
     private final List<WaveSystem> update = new ArrayList<>();
     private final List<WaveSystem> neverUpdate = new ArrayList<>();
+    private boolean started = false;
 
     public SchedulerSingleThread(WaveEngineRunning waveEngineRunning) {
         this.waveEngineRunning = waveEngineRunning;
@@ -18,6 +19,7 @@ public class SchedulerSingleThread implements SchedulerImplementation {
 
     @Override
     public void start() {
+        started = true;
         Logger.getLogger().logInfo("Singlethreaded scheduler started");
 
         for (var system : neverUpdate) {
@@ -73,6 +75,9 @@ public class SchedulerSingleThread implements SchedulerImplementation {
 
     @Override
     public void addSystem(WaveSystem waveSystem, UpdatePolicy updatePolicy) {
+        if (started) {
+            throw new IllegalStateException("Cannot add systems after engine start");
+        }
         switch (updatePolicy) {
             case UPDATE_BEFORE_FRAME:
                 update.add(waveSystem);

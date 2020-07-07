@@ -24,16 +24,10 @@ public class SchedulerMultiThread implements SchedulerImplementation {
         );
 
         synchronizedUpdaterThread = new Thread(() -> {
-            int mySystemCount = systemCount;
             while (true) {
                 waveEngineRunning.getComponentManager().update();
-                allowWorkBetweenUpdates.release(mySystemCount);
-                workFinishedBetweenUpdates.acquireUninterruptibly(mySystemCount);
-                allowNext.release(mySystemCount);
-                if (systemCount != mySystemCount) {
-                    Logger.getLogger().logError("System count changed unexpectedly");
-                    return;
-                }
+                allowWorkBetweenUpdates.release(systemCountForSemaphore);
+                workFinishedBetweenUpdates.acquireUninterruptibly(systemCountForSemaphore);
             }
         }, "Wave Synchronized Multi Threaded Scheduler Update Thread");
     }
@@ -47,18 +41,19 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
     private final Semaphore allowWorkBeforeFrame = new Semaphore(0);
     private final Semaphore allowWorkAfterFrame = new Semaphore(0);
-    private final Semaphore allowNext = new Semaphore(0);
 
-    private int systemCount;
+    private int systemCountForSemaphore;
+    private boolean started = false;
     private final Semaphore allowWorkBetweenUpdates = new Semaphore(0);
     private final Semaphore workFinishedBetweenUpdates = new Semaphore(0);
 
     @Override
     public void start() {
+        started = true;
         Logger.getLogger().logInfo("Multithreaded scheduler started");
         graphicalThread.start();
 
-        systemCount = 1;
+        systemCountForSemaphore = 1;
 
         for (var system : neverUpdate) {
             system.initialize();
@@ -68,7 +63,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
             executorServiceForParallelJobs.submit(() -> {
                 updateParallelLoop(system);
             });
-            systemCount++;
+            systemCountForSemaphore++;
         }
 
         for (var system : updateBeforeFrame) {
@@ -84,7 +79,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                  */
                 while (workingSuccessfully) {
                     allowWorkBeforeFrame.acquireUninterruptibly();
-                    allowWorkBetweenUpdates.acquireUninterruptibly();
                     double delta = (System.currentTimeMillis() - lastUpdateTime)/1000.0;
                     lastUpdateTime = System.currentTimeMillis();
                     try {
@@ -95,12 +89,9 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                         workingSuccessfully = false;
                         waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, system.getName() + " caused exception.");
                     }
-                    workFinishedBetweenUpdates.release();
                     allowWorkAfterFrame.release();
-                    allowNext.acquireUninterruptibly();
                 }
             });
-            systemCount++;
         }
 
         synchronizedUpdaterThread.start();
@@ -112,6 +103,9 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
     @Override
     public void addSystem(WaveSystem waveSystem, UpdatePolicy updatePolicy) {
+        if (started) {
+            throw new IllegalStateException("Cannot add systems after engine start");
+        }
         switch (updatePolicy) {
             case UPDATE_BEFORE_FRAME:
                 updateBeforeFrame.add(waveSystem);
@@ -161,7 +155,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
             waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
 
             workFinishedBetweenUpdates.release();
-            allowNext.acquireUninterruptibly();
         }
 
     }
@@ -197,7 +190,6 @@ public class SchedulerMultiThread implements SchedulerImplementation {
             }
 
             workFinishedBetweenUpdates.release();
-            allowNext.acquireUninterruptibly();
         }
 
     }

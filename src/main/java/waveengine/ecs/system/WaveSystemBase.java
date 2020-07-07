@@ -87,6 +87,10 @@ public abstract class WaveSystemBase {
      * and still need to do some work.
      */
     protected void freeComponents() {
+        if (iterationAcquiredResources == 0) {
+            return;
+        }
+
         iterationAcquiredResources = 0;
         for (var comp : resourcesHeld) {
             comp.close();

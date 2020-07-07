@@ -34,7 +34,7 @@ public class GraphicalResourceManager extends WaveSystem {
 
     public void addResource(Discriminator stage, ResourceLocation resourceLocation) {
         resources.add(Pair.of(stage, resourceLocation));
-        if (actualStage.equals(stage)) {
+        if (stage.equals(actualStage)) {
             loadResource(resourceLocation);
         }
     }

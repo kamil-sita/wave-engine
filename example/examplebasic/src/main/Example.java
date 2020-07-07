@@ -17,15 +17,22 @@ public class Example {
     public static void main(String[] args) {
 
         var renderingSystem = new RenderingSystem() {
+
+            GraphicalResourceManager graphicalResourceManager;
+
+            @Override
+            public void initialize() {
+                graphicalResourceManager = getSystem(GraphicalResourceManager.class);
+                graphicalResourceManager.addResource(DiscStages.MAIN_LOOP0, Resource.TEST_RESOURCE);
+                graphicalResourceManager.addResource(DiscStages.MAIN_LOOP1, Resource.TEST_RESOURCE);
+            }
+
             @Override
             public void update(WaveCanvas canvas, double deltaTime) {
                 var tables = getTablesFor(ComponentPosition.class, ComponentScale.class, ComponentGraphics.class);
                 var positionTable = tables.getTable(ComponentPosition.class);
                 var scaleTable = tables.getTable(ComponentScale.class);
-                var graphicalResourceManager = getSystem(GraphicalResourceManager.class);
 
-                graphicalResourceManager.addResource(DiscStages.MAIN_LOOP0, Resource.TEST_RESOURCE);
-                graphicalResourceManager.addResource(DiscStages.MAIN_LOOP1, Resource.TEST_RESOURCE);
 
                 tables.getTable(ComponentGraphics.class).iterate(
                         (index, graphObj) -> {

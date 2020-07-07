@@ -1,5 +1,6 @@
 package waveengine.ecs.component;
 
+import com.google.common.collect.Sets;
 import waveengine.Discriminator;
 import waveengine.core.Logger;
 import waveengine.core.WaveEngineRunning;
@@ -33,7 +34,7 @@ public class ComponentManager {
         this.waveEngineRunning = waveEngineRunning;
     }
 
-    private AtomicInteger resourcesHeld = new AtomicInteger(0);
+    private final AtomicInteger resourcesHeld = new AtomicInteger(0);
 
     public void update() {
         if (resourcesHeld.get() != 0) {
@@ -81,6 +82,7 @@ public class ComponentManager {
 
         if (changed) {
             cacheForThisStage.clear();
+            tableGroupCache.clear();
         }
     }
 
@@ -135,14 +137,19 @@ public class ComponentManager {
     public ManagedTableGroup getTables(String owner, Discriminator... selectedTables) {
         //todo better threading
         List<Semaphore> semaphores = lockObtain(owner, selectedTables);
-        var tables = getTables(owner, Arrays.asList(selectedTables));
+        var tables = getTables(owner, Sets.newHashSet(selectedTables));
         return new ManagedTableGroup(
                 tables,
                 this,
                 () -> lockRelease(semaphores));
     }
 
-    private TableGroup getTables(String owner, List<Discriminator> asList) { //todo lock should be obtained, so no reason to fear about racing
+    private Map<Set<Discriminator>, TableGroup> tableGroupCache = new HashMap<>();
+
+    private TableGroup getTables(String owner, Set<Discriminator> asList) { //todo lock should be obtained, so no reason to fear about racing
+        if (tableGroupCache.containsKey(asList)) {
+            return tableGroupCache.get(asList);
+        }
         var as = new ComponentContainerImpl(this);
 
         for (var component : asList) {
@@ -158,6 +165,7 @@ public class ComponentManager {
             }
             as.add(component, cacheForThisStage.get(component));
         }
+        tableGroupCache.put(asList, as);
         return as;
     }
 

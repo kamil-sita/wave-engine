@@ -1,7 +1,6 @@
 package waveengine.ecs.system;
 
 
-import waveengine.core.Logger;
 
 public abstract class WaveSystem extends WaveSystemBase {
 
@@ -9,7 +8,7 @@ public abstract class WaveSystem extends WaveSystemBase {
 
     };
 
-    protected void update(double deltaTime) throws Exception {
+    protected void update(double deltaTime) {
 
     };
 
@@ -20,11 +19,7 @@ public abstract class WaveSystem extends WaveSystemBase {
     }
 
     public final void updateIteration(double deltaTime) {
-        try {
-            update(deltaTime);
-        } catch (Exception e) {
-            Logger.getLogger().logError(getName() + ": " + e.toString() + ", " + e.getMessage());
-        }
+        update(deltaTime);
         freeComponents();
     }
 }

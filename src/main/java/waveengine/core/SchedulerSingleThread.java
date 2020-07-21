@@ -90,4 +90,9 @@ public class SchedulerSingleThread implements SchedulerImplementation {
                 break;
         }
     }
+
+    @Override
+    public int getAliveSystemCount() {
+        return 0;
+    }
 }

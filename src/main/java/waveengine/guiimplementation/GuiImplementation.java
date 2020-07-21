@@ -29,14 +29,18 @@ public final class GuiImplementation {
         var graphics = (Graphics2D) bufferStrategy.getDrawGraphics();
         window.superPaintGraphics(graphics);
         if (waveEngineRunning.getWaveEngineParameters().useRepaint()) {
-            graphics.setPaint(Color.WHITE);
             var runtimeParameters = waveEngineRunning.getWaveEngineRuntimeSettings();
+            graphics.setPaint(runtimeParameters.repaintColor());
             graphics.fillRect(0, 0, runtimeParameters.width(), runtimeParameters.height());
         }
-        var waveCanvas = new WaveCanvasImpl(graphics, waveEngineRunning);
+        var waveCanvas = new WaveCanvasImpl(graphics, waveEngineRunning, waveEngineRunning.getRenderer());
         waveEngineRunning.getRenderingSystem().updateAndRelease(waveCanvas, delta);
         graphics.dispose();
         bufferStrategy.show();
+    }
+
+    public void shutdown() {
+        window.dispose();
     }
 
     private class Window extends JFrame {

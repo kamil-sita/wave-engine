@@ -33,6 +33,10 @@ public class Logger {
             logProvider(getTime() + " [INFO ] " + msg);
         }
 
+        default void logShutdown(String msg) {
+            logProvider(getTime() + " [SHUTDOWN] " + msg);
+        }
+
         default void logWarning(String msg) {
             logProvider(getTime() + " [WARN ] " + msg);
         }

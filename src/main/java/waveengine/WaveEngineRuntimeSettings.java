@@ -1,5 +1,7 @@
 package waveengine;
 
+import java.awt.*;
+
 //todo listeners for change
 public class WaveEngineRuntimeSettings {
     public int getTargetFramerate() {
@@ -7,6 +9,10 @@ public class WaveEngineRuntimeSettings {
     }
 
     public int getTargetUPS() {
+        return 144;
+    }
+
+    public int getStageChangePollFrequency() {
         return 144;
     }
 
@@ -20,5 +26,9 @@ public class WaveEngineRuntimeSettings {
 
     public int height() {
         return 900;
+    }
+
+    public Color repaintColor() {
+        return Color.WHITE;
     }
 }

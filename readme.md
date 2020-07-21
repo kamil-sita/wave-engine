@@ -32,7 +32,7 @@ According to Adam Martin (and cited from [Wikipedia](https://en.wikipedia.org/wi
  ## Wave Engine and program flow 
 
 Before Wave Engine starts, it needs to be of course configured. Configuration consists mainly of defining systems 
-and creating entities. Then after engine is launched, each system is initialized via initialize(void) method.
+and creating entities. Then after the engine is launched, each system is initialized via initialize(void) method.
 
 Wave Engine contains two schedulers: SchedulerSingleThread and SchedulerMultiThread. Single threaded scheduler does everything
 on one thread - it starts with normal systems, then renders graphics. Multi threaded scheduler runs everything on executor threads,
@@ -43,3 +43,13 @@ stage change can happen, which results in reloading of resources and changing ac
 in the future - in particular splitting between normal systems and frame-update related ones.
 
 For simplicity Notifying Service also runs on the thread that it was launched from.
+
+All systems should be considered to be timely independent of others. That means, that if one of the systems lags behind, other systems
+do not wait for it. Keep in mind that it also means that slow systems will delay stage change (and addition of new entities), and other systems might wait for data from other systems.
+
+##Other things to keep in mind
+ - passing a null pointer to method for no reason is a bad idea
+ - adding or removing entities at stage runtime might get expensive as it will lead to blocks and index rebuilding - if you use
+ particle systems, consider having them in a separate entity (composite)
+ - allocating massive amounts of new objects in each iteration might get expensive in JVM. Consider reusing objects (like in basic example
+ parameters for renderer are reused in **per object** basis) 

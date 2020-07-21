@@ -2,16 +2,14 @@ package waveengine.library.systems;
 
 import waveengine.Discriminator;
 import waveengine.core.WaveEngine;
+import waveengine.core.WaveEngineRunning;
 import waveengine.core.WaveEngineSystemEvents;
 import waveengine.core.UpdatePolicy;
-import waveengine.ecs.entity.EntityActiveOneStage;
 import waveengine.ecs.system.WaveSystem;
-import waveengine.guiimplementation.GraphicalObject;
-import waveengine.guiimplementation.ImageGraphicalObject;
-import waveengine.threading.AssistedReverseSemaphore;
+import waveengine.guiimplementation.graphicalobject.GraphicalObject;
+import waveengine.guiimplementation.graphicalobject.ImageGraphicalObject;
 import waveengine.util.Pair;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +47,7 @@ public class GraphicalResourceManager extends WaveSystem {
         //
     }
 
-    private void stageChange(Discriminator cause, Object message) {
+    private void stageChange(Discriminator cause, Object message, WaveEngineRunning waveEngineRunning) {
         Discriminator stage = (Discriminator) message;
 
         actualStage = stage;

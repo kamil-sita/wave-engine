@@ -2,6 +2,7 @@ package waveengine.services;
 
 import waveengine.Discriminator;
 import waveengine.core.Logger;
+import waveengine.core.WaveEngineRunning;
 import waveengine.core.WaveEngineSystemEvents;
 
 import java.util.ArrayList;
@@ -13,6 +14,11 @@ import java.util.concurrent.Executors;
 
 public class NotifyingService {
     private Map<Discriminator, List<Notifier>> listeners = new HashMap<>();
+    private final WaveEngineRunning waveEngineRunning;
+
+    public NotifyingService(WaveEngineRunning waveEngineRunning) {
+        this.waveEngineRunning = waveEngineRunning;
+    }
 
     public void addListener(Discriminator discriminator, Notifier notifier) {
         if (!listeners.containsKey(discriminator)) {
@@ -30,7 +36,7 @@ public class NotifyingService {
 
         if (listeners.containsKey(cause)) {
             for (var notifier : listeners.get(cause)) {
-                notifier.notifyListener(cause, message);
+                notifier.notifyListener(cause, message, waveEngineRunning);
             }
         }
     }
@@ -41,7 +47,7 @@ public class NotifyingService {
 
 
     public interface Notifier {
-        void notifyListener(Discriminator cause, Object message);
+        void notifyListener(Discriminator cause, Object message, WaveEngineRunning waveEngineRunning);
     }
 
 }

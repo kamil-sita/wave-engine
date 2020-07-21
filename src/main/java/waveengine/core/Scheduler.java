@@ -26,4 +26,7 @@ public class Scheduler {
         schedulerImplementation.start();
     }
 
+    public int getAliveSystemCount() {
+        return schedulerImplementation.getAliveSystemCount();
+    }
 }

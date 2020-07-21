@@ -1,4 +1,4 @@
-package waveengine.guiimplementation;
+package waveengine.guiimplementation.graphicalobject;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

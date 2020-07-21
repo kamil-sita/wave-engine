@@ -102,7 +102,7 @@ public class Example {
         });
 
         //shutdown listener is needed, since instead of closing, pressing close button sends message to notifier service
-        wave.addListener(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, (cause, message) -> System.exit(0));
+        wave.addListener(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, (cause, message, waveEngRun) -> waveEngRun.shutdown("Window close request", false));
 
         List<Entity> addedEntities = new ArrayList<>();
 

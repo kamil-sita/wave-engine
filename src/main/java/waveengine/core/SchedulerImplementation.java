@@ -6,4 +6,6 @@ public interface SchedulerImplementation {
     void start();
 
     void addSystem(WaveSystem waveSystem, UpdatePolicy updatePolicy);
+
+    int getAliveSystemCount();
 }

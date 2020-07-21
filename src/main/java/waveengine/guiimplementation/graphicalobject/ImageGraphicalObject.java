@@ -1,4 +1,4 @@
-package waveengine.guiimplementation;
+package waveengine.guiimplementation.graphicalobject;
 
 
 import waveengine.library.systems.ResourceLocation;
@@ -36,10 +36,15 @@ public class ImageGraphicalObject implements GraphicalObject {
         }
     }
 
-    BufferedImage bufferedImage;
+    private BufferedImage bufferedImage;
 
     private ImageGraphicalObject(BufferedImage image) {
         this.bufferedImage = image;
+    }
+
+    //todo private
+    public BufferedImage getBufferedImage() {
+        return bufferedImage;
     }
 
     @Override

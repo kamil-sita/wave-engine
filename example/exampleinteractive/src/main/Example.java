@@ -10,7 +10,7 @@ import waveengine.core.WaveEngineSystemEvents;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.renderingparameters.Parameters;
-import waveengine.guiimplementation.ShadedRectangleGraphicalObject;
+import waveengine.guiimplementation.graphicalobject.ShadedRectangleGraphicalObject;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.WaveTables;
 import waveengine.library.objects.Clickable;
@@ -74,7 +74,7 @@ public class Example {
         );
 
         //shutdown listener is needed, since instead of closing, pressing close button sends message to notifier service
-        wave.addListener(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, (cause, message) -> System.exit(0));
+        wave.addListener(WaveEngineSystemEvents.WINDOW_CLOSE_REQUEST, (cause, message, waveEngineRunning) -> waveEngineRunning.shutdown("", false));
 
         wave.setInitialStage(Stages.MAIN_STAGE);
         wave.launch();

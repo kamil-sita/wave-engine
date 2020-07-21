@@ -1,4 +1,4 @@
-package waveengine.guiimplementation;
+package waveengine.guiimplementation.graphicalobject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +16,8 @@ public final class ComposedGraphicalObject implements GraphicalObject {
         return this;
     }
 
-    List<GraphicalObject> getGraphicalObjectList() {
+    //todo hide
+    public List<GraphicalObject> getGraphicalObjectList() {
         return graphicalObjectList;
     }
 }

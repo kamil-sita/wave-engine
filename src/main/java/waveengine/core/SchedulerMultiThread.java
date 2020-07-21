@@ -1,14 +1,19 @@
 package waveengine.core;
 
 import waveengine.ecs.system.WaveSystem;
+import waveengine.exception.ShutdownException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulerMultiThread implements SchedulerImplementation {
+
+    private AtomicInteger liveSystemCount = new AtomicInteger();
 
     public SchedulerMultiThread(WaveEngineRunning waveEngineRunning) {
         this.waveEngineRunning = waveEngineRunning;
@@ -24,11 +29,16 @@ public class SchedulerMultiThread implements SchedulerImplementation {
         );
 
         synchronizedUpdaterThread = new Thread(() -> {
-            while (true) {
-                waveEngineRunning.getComponentManager().update();
-                allowWorkBetweenUpdates.release(systemCountForSemaphore);
-                workFinishedBetweenUpdates.acquireUninterruptibly(systemCountForSemaphore);
+            try {
+                while (waveEngineRunning.isRunning()) {
+                    waveEngineRunning.getComponentManager().update();
+                    allowWorkBetweenUpdates.release(systemCountForSemaphore);
+                    workFinishedBetweenUpdates.acquire(systemCountForSemaphore);
+                }
+            } catch (InterruptedException e) {
+
             }
+            Logger.getLogger().logInfo("Synchronized Multi Threaded Scheduler shut down");
         }, "Wave Synchronized Multi Threaded Scheduler Update Thread");
     }
 
@@ -54,6 +64,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
         graphicalThread.start();
 
         systemCountForSemaphore = 1;
+        liveSystemCount.incrementAndGet();
 
         for (var system : neverUpdate) {
             system.initialize();
@@ -64,34 +75,40 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 updateParallelLoop(system);
             });
             systemCountForSemaphore++;
+            liveSystemCount.incrementAndGet();
         }
 
         for (var system : updateBeforeFrame) {
             executorServiceForBeforeGraphicalParallelJobs.submit(() -> {
-                system.initialize();
+                try {
+                    system.initialize();
 
-                long lastUpdateTime = System.currentTimeMillis();
+                    long lastUpdateTime = System.currentTimeMillis();
 
-                boolean workingSuccessfully = true;
 
-                /*
-                Parallel before frame completion is provided by semaphores.
-                 */
-                while (workingSuccessfully) {
-                    allowWorkBeforeFrame.acquireUninterruptibly();
-                    double delta = (System.currentTimeMillis() - lastUpdateTime)/1000.0;
-                    lastUpdateTime = System.currentTimeMillis();
-                    try {
+                    //Parallel before frame completion is provided by semaphores.
+                    while (waveEngineRunning.isRunning()) {
+                        boolean acquired = false;
+                        while (waveEngineRunning.isRunning() && !acquired) {
+                            acquired = allowWorkBeforeFrame.tryAcquire(100, TimeUnit.MILLISECONDS);
+                        }
+                        if (!acquired) {
+                            break;
+                        }
+                        double delta = (System.currentTimeMillis() - lastUpdateTime)/1000.0;
+                        lastUpdateTime = System.currentTimeMillis();
                         system.updateIteration(delta);
-                    } catch (Exception e) {
-                        Logger.getLogger().logError("Encountered exception with system: " + system.getName() + ". Exception: " + e.getMessage());
-                        e.printStackTrace();
-                        workingSuccessfully = false;
-                        waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, system.getName() + " caused exception.");
+                        allowWorkAfterFrame.release();
                     }
-                    allowWorkAfterFrame.release();
+                } catch (ShutdownException exception) {
+
+                } catch (InterruptedException e) {
+
                 }
+                Logger.getLogger().logInfo(system.getFullName() + " shut down");
+                liveSystemCount.decrementAndGet();
             });
+            liveSystemCount.incrementAndGet();
         }
 
         synchronizedUpdaterThread.start();
@@ -120,6 +137,11 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
     }
 
+    @Override
+    public int getAliveSystemCount() {
+        return liveSystemCount.get();
+    }
+
 
     private void graphicUpdateLoop() {
         var graphicalWaveSystem = waveEngineRunning.getRenderingSystem();
@@ -134,29 +156,57 @@ public class SchedulerMultiThread implements SchedulerImplementation {
             e.printStackTrace();
         }
 
-        while (true) {
+        try {
+            while (waveEngineRunning.isRunning()) {
 
-            long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
+                long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
 
-            while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
-                if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
-                    Thread.onSpinWait();
+                while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
+                    if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
+                        Thread.onSpinWait();
+                    }
                 }
+                boolean acquired = false;
+
+                while (waveEngineRunning.isRunning() && !acquired) {
+                    acquired = allowWorkBetweenUpdates.tryAcquire(100, TimeUnit.MILLISECONDS);
+                }
+                if (!acquired) {
+                    break;
+                }
+
+                double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
+                lastUpdateTime = System.currentTimeMillis();
+
+                int workingSystems = updateBeforeFrame.size();
+                allowWorkBeforeFrame.release(workingSystems);
+                if (!waveEngineRunning.isRunning()) {
+                    break;
+                }
+
+                acquired = false;
+
+                while (waveEngineRunning.isRunning() && !acquired) {
+                    acquired = allowWorkAfterFrame.tryAcquire(workingSystems, 100, TimeUnit.MILLISECONDS);
+                }
+
+                if (!acquired) {
+                    break;
+                }
+
+
+                waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta);
+
+                workFinishedBetweenUpdates.release();
             }
-            allowWorkBetweenUpdates.acquireUninterruptibly();
+        } catch (ShutdownException shutdownException) {
 
-            double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
-            lastUpdateTime = System.currentTimeMillis();
+        } catch (InterruptedException interruptedException) {
 
-            int workingSystems = updateBeforeFrame.size();
-            allowWorkBeforeFrame.release(workingSystems);
-            allowWorkAfterFrame.acquireUninterruptibly(workingSystems);
-
-            waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
-
-            workFinishedBetweenUpdates.release();
         }
-
+        Logger.getLogger().logInfo(graphicalWaveSystem.getFullName() + " shut down");
+        waveEngineRunning.getGuiImplementation().shutdown();
+        liveSystemCount.decrementAndGet();
     }
 
     private void updateParallelLoop(WaveSystem waveSystem) {
@@ -164,33 +214,46 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
         long lastUpdateTime = System.currentTimeMillis();
 
-        boolean workingSuccessfully = true;
 
-        while (workingSuccessfully) {
+        try {
+            while (waveEngineRunning.isRunning()) {
 
-            long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetUPS();
+                long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetUPS();
 
-            while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
-                if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
-                    Thread.onSpinWait();
+                while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
+                    if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
+                        Thread.onSpinWait();
+                    }
                 }
-            }
-            allowWorkBetweenUpdates.acquireUninterruptibly();
+                if (!waveEngineRunning.isRunning()) {
+                    break;
+                }
 
-            double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
-            lastUpdateTime = System.currentTimeMillis();
+                boolean acquired = false;
 
-            try {
+                while (waveEngineRunning.isRunning() && !acquired) {
+                    acquired = allowWorkBetweenUpdates.tryAcquire(100, TimeUnit.MILLISECONDS);
+                }
+
+                if (!acquired) {
+                    break;
+                }
+
+                double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
+                lastUpdateTime = System.currentTimeMillis();
+
                 waveSystem.updateIteration(delta);
-            } catch (Exception e) { //todo no longer possible
-                Logger.getLogger().logError("Encountered exception with system: " + waveSystem.getName() + ". Exception: " + e.getMessage());
-                e.printStackTrace();
-                workingSuccessfully = false;
-                waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.EXCEPTION_WITH_SYSTEM, waveSystem.getName() + " caused exception.");
-            }
 
-            workFinishedBetweenUpdates.release();
+                workFinishedBetweenUpdates.release();
+            }
+        } catch (ShutdownException shutdownException) {
+
+        } catch (InterruptedException e) {
+
         }
+        Logger.getLogger().logInfo(waveSystem.getFullName() + " shut down");
+        liveSystemCount.decrementAndGet();
+
 
     }
 }

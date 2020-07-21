@@ -7,24 +7,23 @@ public class Parameters {
     private float alpha = 1;
     private float scale = 1;
     private boolean isVisible = true;
+    private int modCount = 0;
+
+    public int getModCount() {
+        return modCount;
+    }
 
     public Parameters(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
-    //
-
-
-
-
-    //todo helper functions: position from top left, from center
-
     public float getX() {
         return x;
     }
 
     public Parameters setX(float x) {
+        modCount++;
         this.x = x;
         return this;
     }
@@ -34,6 +33,7 @@ public class Parameters {
     }
 
     public Parameters setY(float y) {
+        modCount++;
         this.y = y;
         return this;
     }
@@ -43,6 +43,7 @@ public class Parameters {
     }
 
     public Parameters setRotation(float rotation) {
+        modCount++;
         this.rotation = rotation;
         return this;
     }
@@ -52,6 +53,7 @@ public class Parameters {
     }
 
     public Parameters setAlpha(float alpha) {
+        modCount++;
         this.alpha = alpha;
         return this;
     }
@@ -61,15 +63,34 @@ public class Parameters {
     }
 
     public Parameters setScale(float scale) {
+        modCount++;
         this.scale = scale;
         return this;
     }
 
+    public Positioning getPositioning() {
+        return null;
+    }
+
+    public Parameters setPositioning(Positioning positioning) {
+        modCount++;
+        return null;
+    }
+
     public boolean isVisible() {
-        return isVisible;
+        return isVisible && (scale != 0) && (alpha != 0);
+    }
+
+    public boolean requiresAlpha() {
+        return alpha != 1;
+    }
+
+    public boolean requiresScale() {
+        return scale != 1;
     }
 
     public Parameters setVisible(boolean visible) {
+        modCount++;
         isVisible = visible;
         return this;
     }
@@ -98,5 +119,18 @@ public class Parameters {
         result = 31 * result + (scale != +0.0f ? Float.floatToIntBits(scale) : 0);
         result = 31 * result + (isVisible ? 1 : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Parameters{" +
+                "x=" + x +
+                ", y=" + y +
+                ", rotation=" + rotation +
+                ", alpha=" + alpha +
+                ", scale=" + scale +
+                ", isVisible=" + isVisible +
+                ", modCount=" + modCount +
+                '}';
     }
 }

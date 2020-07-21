@@ -1,4 +1,4 @@
-package waveengine.guiimplementation;
+package waveengine.guiimplementation.graphicalobject;
 
 public interface GraphicalObject {
     default void dispose() {

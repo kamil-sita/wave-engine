@@ -23,9 +23,12 @@ public class GraphicalResourceManager extends WaveSystem {
     private List<Pair<Discriminator, ResourceLocation>> resources = new ArrayList<>();
     private Discriminator actualStage;
 
+    public GraphicalResourceManager() {
+        setName("Graphical Resource Manager");
+    }
+
     public static void addSelf(WaveEngine waveEngine) {
         GraphicalResourceManager graphicalResourceManager = new GraphicalResourceManager();
-        graphicalResourceManager.setName("Graphical Resource Manager");
         waveEngine.addSystem(UpdatePolicy.NEVER, graphicalResourceManager, GraphicalResourceManager.class);
         waveEngine.addListener(WaveEngineSystemEvents.STAGE_CHANGED, graphicalResourceManager::stageChange);
     }
@@ -35,16 +38,6 @@ public class GraphicalResourceManager extends WaveSystem {
         if (stage.equals(actualStage)) {
             loadResource(resourceLocation);
         }
-    }
-
-    @Override
-    public void initialize() {
-        //
-    }
-
-    @Override
-    public void update(double deltaTime) {
-        //
     }
 
     private void stageChange(Discriminator cause, Object message, WaveEngineRunning waveEngineRunning) {

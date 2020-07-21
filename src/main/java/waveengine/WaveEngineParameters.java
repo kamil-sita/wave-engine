@@ -8,6 +8,7 @@ public final class WaveEngineParameters {
     public int projectWidth() {
         return 1600;
     }
+
     public int projectHeight() {
         return 900;
     }

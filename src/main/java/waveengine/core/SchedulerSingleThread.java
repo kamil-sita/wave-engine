@@ -44,29 +44,29 @@ public class SchedulerSingleThread implements SchedulerImplementation {
         var graphicalWaveSystem = waveEngineRunning.getRenderingSystem();
         graphicalWaveSystem.initialize();
 
-        long lastUpdateTime = System.currentTimeMillis();
+        long lastUpdateTime = System.nanoTime();
         while (true) {
 
             waveEngineRunning.getComponentManager().update();
 
-            long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
+            long waitTimeForFrame = 1_000_000_000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
 
-            while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
+            while ((System.nanoTime() - lastUpdateTime) < waitTimeForFrame) {
                 if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
                     Thread.onSpinWait();
                 }
             }
 
             //rendering
-            double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
-            lastUpdateTime = System.currentTimeMillis();
+            double delta = (System.nanoTime() - lastUpdateTime) / 1_000_000_000.0;
+            lastUpdateTime = System.nanoTime();
 
             //updatable
             for (var system : update) { //todo delta by system?
                 system.updateIteration(delta);
             }
 
-            waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta); //todo add failsafe
+            waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta);
         }
 
 
@@ -80,8 +80,6 @@ public class SchedulerSingleThread implements SchedulerImplementation {
         }
         switch (updatePolicy) {
             case UPDATE_BEFORE_FRAME:
-                update.add(waveSystem);
-                break;
             case UPDATE_PARALLEL:
                 update.add(waveSystem);
                 break;

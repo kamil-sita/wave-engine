@@ -9,6 +9,7 @@ import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.systems.GraphicalResourceManager;
+import waveengine.library.systems.Profiler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,9 @@ public class Example {
             }
         };
         var wave = WaveEngine.newInstance(new WaveEngineParameters(), renderingSystem);
+
         GraphicalResourceManager.addSelf(wave);
+        Profiler.addSelf(wave);
 
         //objects for first stage of the loop
         for (int i = 0; i < 50000; i++) {

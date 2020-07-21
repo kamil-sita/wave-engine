@@ -8,6 +8,7 @@ public class Parameters {
     private float scale = 1;
     private boolean isVisible = true;
     private int modCount = 0;
+    private Positioning positioning = Positioning.ABSOLUTE;
 
     public int getModCount() {
         return modCount;
@@ -69,12 +70,13 @@ public class Parameters {
     }
 
     public Positioning getPositioning() {
-        return null;
+        return positioning;
     }
 
     public Parameters setPositioning(Positioning positioning) {
+        this.positioning = positioning;
         modCount++;
-        return null;
+        return this;
     }
 
     public boolean isVisible() {

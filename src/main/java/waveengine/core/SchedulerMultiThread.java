@@ -83,7 +83,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 try {
                     system.initialize();
 
-                    long lastUpdateTime = System.currentTimeMillis();
+                    long lastUpdateTime = System.nanoTime();
 
 
                     //Parallel before frame completion is provided by semaphores.
@@ -95,8 +95,8 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                         if (!acquired) {
                             break;
                         }
-                        double delta = (System.currentTimeMillis() - lastUpdateTime)/1000.0;
-                        lastUpdateTime = System.currentTimeMillis();
+                        double delta = (System.nanoTime() - lastUpdateTime)/1_000_000_000.0;
+                        lastUpdateTime = System.nanoTime();
                         system.updateIteration(delta);
                         allowWorkAfterFrame.release();
                     }
@@ -159,9 +159,9 @@ public class SchedulerMultiThread implements SchedulerImplementation {
         try {
             while (waveEngineRunning.isRunning()) {
 
-                long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
+                long waitTimeForFrame = 1_000_000_000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
 
-                while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
+                while ((System.nanoTime() - lastUpdateTime) < waitTimeForFrame) {
                     if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
                         Thread.onSpinWait();
                     }
@@ -175,8 +175,8 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                     break;
                 }
 
-                double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
-                lastUpdateTime = System.currentTimeMillis();
+                double delta = (System.nanoTime() - lastUpdateTime) / 1_000_000_000.0;
+                lastUpdateTime = System.nanoTime();
 
                 int workingSystems = updateBeforeFrame.size();
                 allowWorkBeforeFrame.release(workingSystems);
@@ -218,9 +218,9 @@ public class SchedulerMultiThread implements SchedulerImplementation {
         try {
             while (waveEngineRunning.isRunning()) {
 
-                long waitTimeForFrame = 1000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetUPS();
+                long waitTimeForFrame = 1_000_000_000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetUPS();
 
-                while ((System.currentTimeMillis() - lastUpdateTime) < waitTimeForFrame) {
+                while ((System.nanoTime() - lastUpdateTime) < waitTimeForFrame) {
                     if (waveEngineRunning.getWaveEngineParameters().useSystemWaitSpinOnWait()) {
                         Thread.onSpinWait();
                     }
@@ -239,8 +239,8 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                     break;
                 }
 
-                double delta = (System.currentTimeMillis() - lastUpdateTime) / 1000.0;
-                lastUpdateTime = System.currentTimeMillis();
+                double delta = (System.nanoTime() - lastUpdateTime) / 1_000_000_000.0;
+                lastUpdateTime = System.nanoTime();
 
                 waveSystem.updateIteration(delta);
 

@@ -19,6 +19,7 @@ public abstract class WaveSystem extends WaveSystemBase {
     }
 
     public final void updateIteration(double deltaTime) {
+        getWaveEngineRunning().getProfiler().reportUps(1/deltaTime, this);
         update(deltaTime);
         freeComponents();
     }

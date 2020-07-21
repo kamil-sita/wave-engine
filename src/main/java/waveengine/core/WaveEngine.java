@@ -6,7 +6,9 @@ import waveengine.WaveEngineParameters;
 import waveengine.WaveEngineRuntimeSettings;
 import waveengine.ecs.component.ComponentManager;
 import waveengine.ecs.entity.EntityBuilder;
+import waveengine.ecs.system.ProfilerSystem;
 import waveengine.ecs.system.RenderingSystem;
+import waveengine.library.systems.Profiler;
 import waveengine.services.NotifyingService;
 import waveengine.ecs.system.WaveSystem;
 
@@ -122,4 +124,7 @@ public final class WaveEngine {
         return entityBuilder;
     }
 
+    public void addProfiler(ProfilerSystem profiler) {
+        waveEngineRunning.setProfiler(profiler);
+    }
 }

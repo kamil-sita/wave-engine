@@ -17,17 +17,18 @@ public final class WaveCanvasImpl implements WaveCanvas {
     private final List<Integer>[] modCount;
     private final WaveEngineRunning waveEngineRunning;
     private final Renderer renderer;
+    private final int layerCount; //layer count without debug layer
 
     WaveCanvasImpl(Graphics2D graphics, WaveEngineRunning waveEngineRunning, Renderer renderer) {
         this.renderer = renderer;
         this.isStrict = waveEngineRunning.getWaveEngineParameters().strictMode();
         this.waveEngineRunning = waveEngineRunning;
 
-        int layerCount = waveEngineRunning.getWaveEngineParameters().layerCount();
-        renderQueueGraphicalObject = new List[layerCount];
-        renderQueueParameters = new List[layerCount];
-        modCount = new List[layerCount];
-        for (int i = 0; i < layerCount; i++) {
+        layerCount = waveEngineRunning.getWaveEngineParameters().layerCount();
+        renderQueueGraphicalObject = new List[layerCount + 1];
+        renderQueueParameters = new List[layerCount + 1];
+        modCount = new List[layerCount + 1];
+        for (int i = 0; i < layerCount + 1; i++) {
             renderQueueGraphicalObject[i] = new ArrayList<>(65536);
             renderQueueParameters[i] = new ArrayList<>(65536);
             if (isStrict) {
@@ -47,9 +48,14 @@ public final class WaveCanvasImpl implements WaveCanvas {
         modCount[layer].add(parameters.getModCount());
     }
 
+    @Override
+    public int getLayerCount() {
+        return layerCount;
+    }
+
     public void renderQueue() {
         for (int i = 0; i < renderQueueGraphicalObject.length; i++) {
-            for (int j = 0; j < renderQueueGraphicalObject[0].size(); j++) {
+            for (int j = 0; j < renderQueueGraphicalObject[i].size(); j++) {
                 if (isStrict) {
                     if (modCount[i].get(j) != renderQueueParameters[i].get(j).getModCount()) {
                         waveEngineRunning.shutdown(

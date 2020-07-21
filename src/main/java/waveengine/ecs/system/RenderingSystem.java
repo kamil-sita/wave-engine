@@ -13,7 +13,13 @@ public abstract class RenderingSystem extends WaveSystemBase {
     };
     public final void updateAndRelease(WaveCanvasImpl canvas, double deltaTime) {
         try {
+            if (getWaveEngineRunning().getProfiler() != null) {
+                getWaveEngineRunning().getProfiler().reportUps(1/deltaTime, this);
+            }
             update(canvas, deltaTime);
+            if (getWaveEngineRunning().getProfiler() != null) {
+                getWaveEngineRunning().getProfiler().render(canvas);
+            }
             canvas.renderQueue();
         } catch (Exception e) {
             Logger.getLogger().logError(e.getMessage());

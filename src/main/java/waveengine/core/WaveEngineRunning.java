@@ -5,12 +5,14 @@ import waveengine.WaveEngineParameters;
 import waveengine.WaveEngineRuntimeSettings;
 import waveengine.ecs.component.ComponentManager;
 import waveengine.ecs.entity.EntityBuilder;
+import waveengine.ecs.system.ProfilerSystem;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.exception.ShutdownException;
 import waveengine.guiimplementation.GuiImplementation;
 import waveengine.guiimplementation.Interactions;
 import waveengine.guiimplementation.Renderer;
+import waveengine.library.systems.Profiler;
 import waveengine.services.NotifyingService;
 
 import java.util.HashMap;
@@ -26,6 +28,7 @@ public class WaveEngineRunning {
     private GuiImplementation guiImplementation = new GuiImplementation(this);
     private Renderer renderer = new Renderer(this);
     private ComponentManager facade;
+    private ProfilerSystem profilerSystem;
 
     private boolean isRunning = true; //todo after scheduler starts
 
@@ -153,5 +156,13 @@ public class WaveEngineRunning {
 
     public boolean isRunning() {
         return isRunning;
+    }
+
+    void setProfiler(ProfilerSystem profiler) {
+        this.profilerSystem = profiler;
+    }
+
+    public ProfilerSystem getProfiler() {
+        return profilerSystem;
     }
 }

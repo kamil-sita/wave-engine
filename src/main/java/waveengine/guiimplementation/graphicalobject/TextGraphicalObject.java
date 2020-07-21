@@ -1,62 +1,44 @@
 package waveengine.guiimplementation.graphicalobject;
 
+
+import waveengine.guiimplementation.renderingparameters.Parameters;
+import waveengine.guiimplementation.renderingparameters.Positioning;
+
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TextGraphicalObject implements GraphicalObject {
+    private final String text;
+    private final int size;
+    private final Color color;
+    private final String font;
+    private final int style; //Font.* style
+    private final Font fontObj;
 
-    private static final Map<TgoKey, BufferedImage> map = new HashMap<>();
+    public TextGraphicalObject(String text, int size, Color color, String font, int style) {
+        this.text = text;
+        this.size = size;
+        this.color = color;
+        this.font = font;
+        this.style = style;
+        this.fontObj = new Font(font, style, size);
+    }
+
+    public TextGraphicalObject(String text, int size, Color color, String font) {
+        this(text, size, color, font, Font.BOLD);
+    }
 
     public TextGraphicalObject(String text, int size, Color color) {
-        this.tgoKey = new TgoKey(color, text, size);
+        this(text, size, color, "Arial");
     }
 
-    private TgoKey tgoKey;
-
-    BufferedImage getlazy() {
-        if (map.containsKey(tgoKey)) {
-            return map.get(tgoKey);
-        }
-        BufferedImage image = create();
-        map.put(tgoKey, image);
-        return image;
-    }
-
-    private BufferedImage create() {
-        return null;
-    }
-
-    private class TgoKey {
-        private Color color;
-        private String text;
-        private int size;
-
-        public TgoKey(Color color, String text, int size) {
-            this.color = color;
-            this.text = text;
-            this.size = size;
+    @Override
+    public void render(Graphics2D graphics2D, Parameters parameters) {
+        if (parameters.getPositioning() != Positioning.ABSOLUTE) {
+            return; //not yet implemented
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            TgoKey tgoKey = (TgoKey) o;
-
-            if (size != tgoKey.size) return false;
-            if (!color.equals(tgoKey.color)) return false;
-            return text.equals(tgoKey.text);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = color.hashCode();
-            result = 31 * result + text.hashCode();
-            result = 31 * result + size;
-            return result;
-        }
+        graphics2D.setFont(fontObj);
+        graphics2D.setColor(color);
+        graphics2D.drawString(text, parameters.getX(), parameters.getY());
     }
 }

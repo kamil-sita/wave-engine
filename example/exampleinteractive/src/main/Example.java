@@ -16,6 +16,7 @@ import waveengine.library.WaveTables;
 import waveengine.library.objects.Clickable;
 import waveengine.library.systems.ButtonStateChecker;
 import waveengine.library.systems.GraphicalResourceManager;
+import waveengine.library.systems.Profiler;
 
 import java.awt.*;
 
@@ -59,6 +60,8 @@ public class Example {
 
         //button state checker system
         ButtonStateChecker.addSelf(wave);
+        //profiler
+        Profiler.addSelf(wave);
 
         //position system
         wave.addSystem(UpdatePolicy.UPDATE_PARALLEL, new WaveSystem() {

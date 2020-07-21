@@ -14,6 +14,7 @@ public abstract class WaveSystemBase {
     private WaveEngineRunning waveEngineRunning;
     private List<ManagedTableGroup> resourcesHeld = new ArrayList<>();
     private String name;
+    private String creator;
     private int iterationAcquiredResources = 0;
     private boolean iterationAcquiredResourcesWarningShown = false;
 

@@ -1,10 +1,7 @@
 package waveengine.guiimplementation;
 
 import waveengine.core.WaveEngineRunning;
-import waveengine.guiimplementation.graphicalobject.ComposedGraphicalObject;
-import waveengine.guiimplementation.graphicalobject.GraphicalObject;
-import waveengine.guiimplementation.graphicalobject.ImageGraphicalObject;
-import waveengine.guiimplementation.graphicalobject.ShadedRectangleGraphicalObject;
+import waveengine.guiimplementation.graphicalobject.*;
 import waveengine.guiimplementation.renderingparameters.Parameters;
 
 import java.awt.*;
@@ -36,6 +33,11 @@ public final class Renderer {
 
         if (graphicalObject instanceof ShadedRectangleGraphicalObject) {
             render(canvas, (ShadedRectangleGraphicalObject) graphicalObject, parameters);
+            return;
+        }
+
+        if (graphicalObject instanceof TextGraphicalObject) {
+            graphicalObject.render(canvas, parameters);
             return;
         }
 
@@ -76,7 +78,6 @@ public final class Renderer {
             canvas.drawImage(image, affineTransform, null);
             return;
         }
-        System.out.println(parameters.requiresScale() + ", " + parameters.requiresAlpha());
         cannotRender(graphicalObject, parameters);
     }
 

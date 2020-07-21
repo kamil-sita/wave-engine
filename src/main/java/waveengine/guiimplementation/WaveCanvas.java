@@ -14,5 +14,13 @@ public interface WaveCanvas {
     int FOREGROUND_PARTICLES = 5;
 
     void render(GraphicalObject graphicalObject, Parameters parameters);
+
     void render(GraphicalObject graphicalObject, Parameters parameters, int layer);
+
+    int getLayerCount();
+
+    default void renderDebug(GraphicalObject graphicalObject, Parameters parameters) {
+        render(graphicalObject, parameters, getLayerCount());
+    }
+
 }

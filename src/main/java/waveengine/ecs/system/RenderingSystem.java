@@ -16,15 +16,11 @@ public abstract class RenderingSystem extends WaveSystemBase {
             if (getWaveEngineRunning().getProfiler() != null) {
                 getWaveEngineRunning().getProfiler().reportUps(1/deltaTime, this);
             }
-            long time = System.nanoTime();
             update(canvas, deltaTime);
-            System.out.println("iter:" + (System.nanoTime() - time) / 1_000_000.0 );
             if (getWaveEngineRunning().getProfiler() != null) {
                 getWaveEngineRunning().getProfiler().render(canvas);
             }
-            time = System.nanoTime();
             canvas.renderQueue();
-            System.out.println("rend:" + (System.nanoTime() - time) / 1_000_000.0 );
         } catch (Exception e) {
             Logger.getLogger().logError(e.getMessage());
             e.printStackTrace();

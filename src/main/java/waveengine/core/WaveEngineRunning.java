@@ -26,7 +26,7 @@ public class WaveEngineRunning {
     private Discriminator currentStage = DefaultStageDiscriminator.STAGE_DEFAULT;
     private Scheduler scheduler;
     private GuiImplementation guiImplementation = new GuiImplementation(this);
-    private Renderer renderer = new Renderer(this);
+    private Renderer renderer;
     private ComponentManager facade;
     private ProfilerSystem profilerSystem;
 
@@ -36,6 +36,7 @@ public class WaveEngineRunning {
     public WaveEngineRunning(WaveEngine waveEngine) {
         this.waveEngine = waveEngine;
         facade = new ComponentManager(this);
+        renderer = getWaveEngineParameters().getRenderer(this);
     }
 
     Scheduler getScheduler() {

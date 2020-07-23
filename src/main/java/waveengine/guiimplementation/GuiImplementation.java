@@ -10,6 +10,8 @@ public final class GuiImplementation {
     private Window window;
     private WaveEngineRunning waveEngineRunning;
     private Interactions interactions;
+    private GraphicsCache graphicsCache;
+    private WaveCanvasImpl waveCanvas;
 
     public GuiImplementation(WaveEngineRunning waveEngineRunning) {
         this.waveEngineRunning = waveEngineRunning;
@@ -18,6 +20,7 @@ public final class GuiImplementation {
     public void initialize() {
         window = new Window();
         window.initialize();
+        graphicsCache = waveEngineRunning.getWaveEngineParameters().getGraphicsCache();
     }
 
     public Interactions getInteractions() {
@@ -33,7 +36,11 @@ public final class GuiImplementation {
             graphics.setPaint(runtimeParameters.repaintColor());
             graphics.fillRect(0, 0, runtimeParameters.width(), runtimeParameters.height());
         }
-        var waveCanvas = new WaveCanvasImpl(graphics, waveEngineRunning, waveEngineRunning.getRenderer());
+        long time = System.nanoTime();
+        if (waveCanvas == null) {
+            waveCanvas = new WaveCanvasImpl(graphics, waveEngineRunning, waveEngineRunning.getRenderer(), graphicsCache);
+        }
+        waveCanvas.setGraphics(graphics);
         waveEngineRunning.getRenderingSystem().updateAndRelease(waveCanvas, delta);
         graphics.dispose();
         bufferStrategy.show();

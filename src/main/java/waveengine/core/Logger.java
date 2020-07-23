@@ -46,5 +46,9 @@ public class Logger {
             Date now = new Date();
             return sdfDate.format(now);
         }
+
+        default void logDebug(String msg) {
+            logProvider(getTime() + " [DEBUG] " + msg);
+        };
     }
 }

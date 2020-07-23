@@ -17,10 +17,6 @@ public final class WaveEngineParameters {
         return 4;
     }
 
-    public int numberOfThreadsForAfterGraphicsJobs() {
-        return 4;
-    }
-
     public boolean useSystemWaitSpinOnWait() {
         return true;
     }
@@ -33,7 +29,7 @@ public final class WaveEngineParameters {
     }
 
     public boolean singleThreaded() {
-        return true;
+        return false;
     }
 
     /**

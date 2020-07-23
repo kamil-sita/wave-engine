@@ -47,7 +47,11 @@ public class SchedulerSingleThread implements SchedulerImplementation {
         long lastUpdateTime = System.nanoTime();
         while (true) {
 
-            waveEngineRunning.getComponentManager().update();
+            var componentManager = waveEngineRunning.getComponentManager();
+
+            if (componentManager.isUpdateNeeded()) {
+                componentManager.update();
+            }
 
             long waitTimeForFrame = 1_000_000_000 / waveEngineRunning.getWaveEngineRuntimeSettings().getTargetFramerate();
 
@@ -79,7 +83,6 @@ public class SchedulerSingleThread implements SchedulerImplementation {
             throw new IllegalStateException("Cannot add systems after engine start");
         }
         switch (updatePolicy) {
-            case UPDATE_BEFORE_FRAME:
             case UPDATE_PARALLEL:
                 update.add(waveSystem);
                 break;

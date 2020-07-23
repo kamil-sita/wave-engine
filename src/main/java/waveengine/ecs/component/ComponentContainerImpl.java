@@ -1,6 +1,7 @@
 package waveengine.ecs.component;
 
 import waveengine.Discriminator;
+import waveengine.core.Logger;
 
 import java.util.*;
 
@@ -74,6 +75,7 @@ public class ComponentContainerImpl implements TableGroup {
         }
 
         private void buildOrderList() {
+            long start = System.nanoTime();
             var indexList = new ArrayList<>(objectMap.keySet());
 
             indexList.sort(Comparator.comparingInt(x -> x));
@@ -85,6 +87,7 @@ public class ComponentContainerImpl implements TableGroup {
             for (Integer i : orderList) {
                 ordererdObjectList.add(objectMap.get(i));
             }
+            Logger.getLogger().logDebug("Order list for " + ordererdObjectList.size() + " elements build in " + (System.nanoTime() - start) / 1_000_000_000.0 + " seconds");
         }
 
         @Override

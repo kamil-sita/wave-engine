@@ -12,10 +12,6 @@ public class WaveEngineRuntimeSettings {
         return 144;
     }
 
-    public int getStageChangePollFrequency() {
-        return 144;
-    }
-
     public String windowName() {
         return "TEST";
     }

@@ -36,6 +36,18 @@ public class ComponentManager {
 
     private final AtomicInteger resourcesHeld = new AtomicInteger(0);
 
+    public boolean isUpdateNeeded() {
+        if (!addingSet.isEmpty() || !removingSet.isEmpty()) {
+            return true;
+        }
+
+        if (nextStage != null) {
+            return true;
+        }
+
+        return false;
+    }
+
     public void update() {
         if (resourcesHeld.get() != 0) {
             throw new IllegalStateException("No resources should be held");

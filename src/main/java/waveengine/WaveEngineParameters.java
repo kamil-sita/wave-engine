@@ -1,5 +1,11 @@
 package waveengine;
 
+import waveengine.core.WaveEngineRunning;
+import waveengine.guiimplementation.GraphicsCache;
+import waveengine.guiimplementation.GraphicsCacheImpl;
+import waveengine.guiimplementation.Renderer;
+import waveengine.guiimplementation.RendererImpl;
+
 /**
  * This class constains parameters that should be set only once and not changed during runtime.
  */
@@ -46,5 +52,13 @@ public final class WaveEngineParameters {
      */
     public boolean strictMode() {
         return true;
+    }
+
+    public Renderer getRenderer(WaveEngineRunning waveEngineRunning) {
+        return new RendererImpl(waveEngineRunning);
+    }
+
+    public GraphicsCache getGraphicsCache() {
+        return new GraphicsCacheImpl();
     }
 }

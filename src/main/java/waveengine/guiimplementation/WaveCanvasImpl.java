@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class WaveCanvasImpl implements WaveCanvas {
-    private final Graphics2D graphics;
+    private Graphics2D graphics;
 
     private final List<GraphicalObject>[] renderQueueGraphicalObject;
     private final List<Parameters>[] renderQueueParameters;
@@ -18,8 +18,11 @@ public final class WaveCanvasImpl implements WaveCanvas {
     private final WaveEngineRunning waveEngineRunning;
     private final Renderer renderer;
     private final int layerCount; //layer count without debug layer
+    private final GraphicsCache cache;
 
-    WaveCanvasImpl(Graphics2D graphics, WaveEngineRunning waveEngineRunning, Renderer renderer) {
+    WaveCanvasImpl(Graphics2D graphics, WaveEngineRunning waveEngineRunning, Renderer renderer, GraphicsCache cache) {
+        System.out.println("new impl");
+        this.cache = cache;
         this.renderer = renderer;
         this.isStrict = waveEngineRunning.getWaveEngineParameters().strictMode();
         this.waveEngineRunning = waveEngineRunning;
@@ -35,6 +38,10 @@ public final class WaveCanvasImpl implements WaveCanvas {
                 modCount[i] = new ArrayList<>(65536);
             }
         }
+        this.graphics = graphics;
+    }
+
+    public void setGraphics(Graphics2D graphics) {
         this.graphics = graphics;
     }
 
@@ -62,7 +69,8 @@ public final class WaveCanvasImpl implements WaveCanvas {
                     if (modCount[i].get(j) != renderQueueParameters[i].get(j).getModCount()) {
                         waveEngineRunning.shutdown(
                                 "Parameter modification count differs from from expected count. " +
-                                "Parameters should not be modified in iteration after passing them to renderer.",
+                                "Parameters should not be modified in iteration after passing them to renderer. \r\n" +
+                                "Expected: " + renderQueueParameters[i].get(j).getModCount() + ", got: " + modCount[i].get(j),
                                 true
                         );
                     }
@@ -70,11 +78,15 @@ public final class WaveCanvasImpl implements WaveCanvas {
                 renderer.render(
                         graphics,
                         renderQueueGraphicalObject[i].get(j),
-                        renderQueueParameters[i].get(j)
+                        renderQueueParameters[i].get(j),
+                        cache
                 );
             }
             renderQueueGraphicalObject[i].clear();
             renderQueueParameters[i].clear();
+            if (isStrict) {
+                modCount[i].clear();
+            }
         }
     }
 

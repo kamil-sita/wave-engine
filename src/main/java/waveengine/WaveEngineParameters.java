@@ -33,7 +33,7 @@ public final class WaveEngineParameters {
     }
 
     public boolean singleThreaded() {
-        return false;
+        return true;
     }
 
     /**

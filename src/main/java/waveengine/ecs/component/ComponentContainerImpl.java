@@ -32,6 +32,7 @@ public class ComponentContainerImpl implements TableGroup {
 
         private Map<Integer, Object> objectMap;
         private List<Integer> orderList;
+        private List<Object> ordererdObjectList;
 
         public TableImpl(Map<Integer, Object> objectMap) {
             this.objectMap = objectMap;
@@ -43,10 +44,20 @@ public class ComponentContainerImpl implements TableGroup {
             if (orderList == null) {
                 buildOrderList();
             }
-            for (var index : orderList) {
-                var obj = objectMap.get(index);
-                workOnTable.doSthOnObject(index, obj);
+            if (false) { //todo which is better, if 1st is better do the same to reverseIterate
+                for (int i = 0; i < ordererdObjectList.size(); i++) {
+                    workOnTable.doSthOnObject(
+                        orderList.get(i),
+                            ordererdObjectList.get(i)
+                    );
+                }
+            } else {
+                for (var index : orderList) {
+                    var obj = objectMap.get(index);
+                    workOnTable.doSthOnObject(index, obj);
+                }
             }
+
         }
 
         @Override
@@ -68,6 +79,12 @@ public class ComponentContainerImpl implements TableGroup {
             indexList.sort(Comparator.comparingInt(x -> x));
 
             orderList = indexList;
+
+            ordererdObjectList = new ArrayList<>(orderList.size());
+
+            for (Integer i : orderList) {
+                ordererdObjectList.add(objectMap.get(i));
+            }
         }
 
         @Override

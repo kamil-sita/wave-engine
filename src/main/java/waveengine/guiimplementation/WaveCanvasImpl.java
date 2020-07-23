@@ -45,7 +45,9 @@ public final class WaveCanvasImpl implements WaveCanvas {
     public void render(GraphicalObject graphicalObject, Parameters parameters, int layer) {
         renderQueueGraphicalObject[layer].add(graphicalObject);
         renderQueueParameters[layer].add(parameters);
-        modCount[layer].add(parameters.getModCount());
+        if (isStrict) {
+            modCount[layer].add(parameters.getModCount());
+        }
     }
 
     @Override

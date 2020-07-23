@@ -62,7 +62,7 @@ public class Example {
         Profiler.addSelf(wave);
 
         //objects for first stage of the loop
-        for (int i = 0; i < 50000; i++) {
+        for (int i = 0; i < 10000; i++) {
             wave.getEntityBuilder()
                     .oneStage(DiscStages.MAIN_LOOP0)
                     .addToComponent(new ComponentPosition(), ComponentPosition.class)

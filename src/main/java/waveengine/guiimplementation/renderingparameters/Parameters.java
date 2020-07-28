@@ -7,6 +7,7 @@ public class Parameters {
     private float alpha = 1;
     private float scale = 1;
     private boolean isVisible = true;
+    private boolean disableCache = false;
     private int modCount = 0;
     private Positioning positioning = Positioning.ABSOLUTE;
 
@@ -97,6 +98,15 @@ public class Parameters {
         return this;
     }
 
+    public boolean isDisableCache() {
+        return disableCache;
+    }
+
+    public void setDisableCache(boolean disableCache) {
+        modCount++;
+        this.disableCache = disableCache;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -110,29 +120,5 @@ public class Parameters {
         if (Float.compare(that.alpha, alpha) != 0) return false;
         if (Float.compare(that.scale, scale) != 0) return false;
         return isVisible == that.isVisible;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (x != +0.0f ? Float.floatToIntBits(x) : 0);
-        result = 31 * result + (y != +0.0f ? Float.floatToIntBits(y) : 0);
-        result = 31 * result + (rotation != +0.0f ? Float.floatToIntBits(rotation) : 0);
-        result = 31 * result + (alpha != +0.0f ? Float.floatToIntBits(alpha) : 0);
-        result = 31 * result + (scale != +0.0f ? Float.floatToIntBits(scale) : 0);
-        result = 31 * result + (isVisible ? 1 : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "Parameters{" +
-                "x=" + x +
-                ", y=" + y +
-                ", rotation=" + rotation +
-                ", alpha=" + alpha +
-                ", scale=" + scale +
-                ", isVisible=" + isVisible +
-                ", modCount=" + modCount +
-                '}';
     }
 }

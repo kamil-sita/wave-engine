@@ -1,5 +1,6 @@
 package waveengine.guiimplementation;
 
+import waveengine.guiimplementation.cache.GraphicsCache;
 import waveengine.guiimplementation.graphicalobject.GraphicalObject;
 import waveengine.guiimplementation.renderingparameters.Parameters;
 

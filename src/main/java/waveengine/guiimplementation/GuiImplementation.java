@@ -1,6 +1,7 @@
 package waveengine.guiimplementation;
 
 import waveengine.core.WaveEngineRunning;
+import waveengine.guiimplementation.cache.GraphicsCache;
 
 import javax.swing.*;
 import java.awt.*;

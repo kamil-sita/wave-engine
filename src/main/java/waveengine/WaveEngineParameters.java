@@ -1,8 +1,8 @@
 package waveengine;
 
 import waveengine.core.WaveEngineRunning;
-import waveengine.guiimplementation.GraphicsCache;
-import waveengine.guiimplementation.GraphicsCacheImpl;
+import waveengine.guiimplementation.cache.GraphicsCache;
+import waveengine.guiimplementation.cache.GraphicsCacheImpl;
 import waveengine.guiimplementation.Renderer;
 import waveengine.guiimplementation.RendererImpl;
 

@@ -1,11 +1,13 @@
 package waveengine.guiimplementation;
 
 import waveengine.core.WaveEngineRunning;
+import waveengine.guiimplementation.cache.GraphicsCache;
 import waveengine.guiimplementation.graphicalobject.*;
 import waveengine.guiimplementation.renderingparameters.Parameters;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 
 public final class RendererImpl implements Renderer {
     private final WaveEngineRunning waveEngineRunning;
@@ -24,6 +26,12 @@ public final class RendererImpl implements Renderer {
                 render(canvas, graphicalObjectElement, parameters, cache);
             }
             return;
+        }
+
+        //todo scale and pos for non-absolute
+        var image = cache.get(graphicalObject, parameters);
+        if (image != null) {
+
         }
 
         if (graphicalObject instanceof ImageGraphicalObject) {

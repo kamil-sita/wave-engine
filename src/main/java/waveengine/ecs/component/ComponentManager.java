@@ -89,6 +89,8 @@ public class ComponentManager {
 
             rebuildActiveEntities();
 
+            waveEngineRunning.getWaveEngineParameters().getGraphicsCache().clear();
+
             waveEngineRunning.getNotifyingService().notifyListeners(WaveEngineSystemEvents.STAGE_CHANGED, currentStage);
         }
 

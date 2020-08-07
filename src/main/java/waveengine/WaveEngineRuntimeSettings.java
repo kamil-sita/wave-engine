@@ -16,14 +16,6 @@ public class WaveEngineRuntimeSettings {
         return "TEST";
     }
 
-    public int width() {
-        return 1600;
-    }
-
-    public int height() {
-        return 900;
-    }
-
     public Color repaintColor() {
         return Color.WHITE;
     }

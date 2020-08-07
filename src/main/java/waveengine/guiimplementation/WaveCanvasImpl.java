@@ -1,7 +1,6 @@
 package waveengine.guiimplementation;
 
 import waveengine.core.WaveEngineRunning;
-import waveengine.guiimplementation.cache.GraphicsCache;
 import waveengine.guiimplementation.graphicalobject.GraphicalObject;
 import waveengine.guiimplementation.renderingparameters.Parameters;
 
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class WaveCanvasImpl implements WaveCanvas {
-    private Graphics2D graphics;
 
     private final List<GraphicalObject>[] renderQueueGraphicalObject;
     private final List<Parameters>[] renderQueueParameters;
@@ -19,11 +17,8 @@ public final class WaveCanvasImpl implements WaveCanvas {
     private final WaveEngineRunning waveEngineRunning;
     private final Renderer renderer;
     private final int layerCount; //layer count without debug layer
-    private final GraphicsCache cache;
 
-    WaveCanvasImpl(Graphics2D graphics, WaveEngineRunning waveEngineRunning, Renderer renderer, GraphicsCache cache) {
-        System.out.println("new impl");
-        this.cache = cache;
+    WaveCanvasImpl(WaveEngineRunning waveEngineRunning, Renderer renderer) {
         this.renderer = renderer;
         this.isStrict = waveEngineRunning.getWaveEngineParameters().strictMode();
         this.waveEngineRunning = waveEngineRunning;
@@ -39,11 +34,6 @@ public final class WaveCanvasImpl implements WaveCanvas {
                 modCount[i] = new ArrayList<>(65536);
             }
         }
-        this.graphics = graphics;
-    }
-
-    public void setGraphics(Graphics2D graphics) {
-        this.graphics = graphics;
     }
 
     public void render(GraphicalObject graphicalObject, Parameters parameters) {
@@ -77,10 +67,8 @@ public final class WaveCanvasImpl implements WaveCanvas {
                     }
                 }
                 renderer.render(
-                        graphics,
                         renderQueueGraphicalObject[i].get(j),
-                        renderQueueParameters[i].get(j),
-                        cache
+                        renderQueueParameters[i].get(j)
                 );
             }
             renderQueueGraphicalObject[i].clear();

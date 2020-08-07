@@ -1,11 +1,10 @@
 package waveengine.guiimplementation;
 
-import waveengine.guiimplementation.cache.GraphicsCache;
 import waveengine.guiimplementation.graphicalobject.GraphicalObject;
 import waveengine.guiimplementation.renderingparameters.Parameters;
 
-import java.awt.*;
 
 public interface Renderer {
-    void render(Graphics2D canvas, GraphicalObject graphicalObject, Parameters parameters, GraphicsCache cache);
+    void render(GraphicalObject graphicalObject, Parameters parameters);
+    void renderSquare(int x, int y);
 }

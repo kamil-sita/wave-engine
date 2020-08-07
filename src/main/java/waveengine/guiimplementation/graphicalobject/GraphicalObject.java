@@ -9,19 +9,7 @@ public interface GraphicalObject {
 
     }
 
-    default boolean supportsCache() {
-        return true;
-    }
-
     default void render(Graphics2D graphics2D, Parameters parameters) {
 
     }
-
-    default void renderCache(Graphics2D graphics2D, float rotation, float scale, float alpha) {
-
-    }
-
-    int width();
-
-    int height();
 }

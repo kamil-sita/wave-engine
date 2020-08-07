@@ -31,7 +31,6 @@ public class SchedulerSingleThread implements SchedulerImplementation {
         }
 
         new Thread(this::detachedUpdate, "Wave Single Threaded Scheduler").start();
-
     }
 
     private void detachedUpdate() {
@@ -40,6 +39,8 @@ public class SchedulerSingleThread implements SchedulerImplementation {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        waveEngineRunning.getGuiImplementation().initialize();
 
         var graphicalWaveSystem = waveEngineRunning.getRenderingSystem();
         graphicalWaveSystem.initialize();
@@ -70,7 +71,7 @@ public class SchedulerSingleThread implements SchedulerImplementation {
                 system.updateIteration(delta);
             }
 
-            waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta);
+            waveEngineRunning.getGuiImplementation().updateWindow(waveEngineRunning, delta);
         }
 
 

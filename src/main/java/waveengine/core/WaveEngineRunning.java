@@ -97,7 +97,6 @@ public class WaveEngineRunning {
     }
 
     void launch() {
-        guiImplementation.initialize();
         scheduler.start();
     }
 

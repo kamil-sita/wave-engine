@@ -110,6 +110,9 @@ public class SchedulerMultiThread implements SchedulerImplementation {
 
 
     private void graphicUpdateLoop() {
+        waveEngineRunning.getGuiImplementation().initialize();
+
+
         var graphicalWaveSystem = waveEngineRunning.getRenderingSystem();
 
         graphicalWaveSystem.initialize();
@@ -149,7 +152,7 @@ public class SchedulerMultiThread implements SchedulerImplementation {
                 double delta = (System.nanoTime() - lastUpdateTime) / 1_000_000_000.0;
                 lastUpdateTime = System.nanoTime();
 
-                waveEngineRunning.getGuiImplementation().updateRenderingSystem(waveEngineRunning, delta);
+                waveEngineRunning.getGuiImplementation().updateWindow(waveEngineRunning, delta);
             }
         } catch (ShutdownException shutdownException) {
 

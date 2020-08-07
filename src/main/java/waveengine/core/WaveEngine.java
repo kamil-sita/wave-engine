@@ -42,10 +42,6 @@ public final class WaveEngine {
      */
     public void launch() {
         Logger.getLogger().logInfo("Launching WaveEngine");
-        Logger.getLogger().logInfo("Setting properties");
-        System.setProperty("sun.java2d.translaccel", "True");
-        System.setProperty("sun.java2d.opengl", "True");
-        Logger.getLogger().logInfo("Launching");
         waveEngineRunning.launch();
     }
 

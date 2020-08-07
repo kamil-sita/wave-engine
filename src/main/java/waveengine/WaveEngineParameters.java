@@ -1,8 +1,6 @@
 package waveengine;
 
 import waveengine.core.WaveEngineRunning;
-import waveengine.guiimplementation.cache.GraphicsCache;
-import waveengine.guiimplementation.cache.GraphicsCacheImpl;
 import waveengine.guiimplementation.Renderer;
 import waveengine.guiimplementation.RendererImpl;
 
@@ -24,13 +22,6 @@ public final class WaveEngineParameters {
     }
 
     public boolean useSystemWaitSpinOnWait() {
-        return true;
-    }
-
-    /**
-     * Whether canvas in repainted before each iteration. Recommended true.
-     */
-    public boolean useRepaint() {
         return true;
     }
 
@@ -56,9 +47,5 @@ public final class WaveEngineParameters {
 
     public Renderer getRenderer(WaveEngineRunning waveEngineRunning) {
         return new RendererImpl(waveEngineRunning);
-    }
-
-    public GraphicsCache getGraphicsCache() {
-        return new GraphicsCacheImpl();
     }
 }

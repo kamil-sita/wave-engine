@@ -42,7 +42,7 @@ public class NotifyingService {
     }
 
     public void removeListener(Discriminator discriminator, Notifier notifier) {
-        listeners.get(discriminator).remove(notifier);
+        listeners.get(discriminator).remove(notifier); //todo thread safe
     }
 
 

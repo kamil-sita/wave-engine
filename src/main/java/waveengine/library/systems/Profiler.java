@@ -1,5 +1,6 @@
 package waveengine.library.systems;
 
+import waveengine.core.Logger;
 import waveengine.core.WaveEngine;
 import waveengine.ecs.system.ProfilerSystem;
 import waveengine.ecs.system.WaveSystem;
@@ -18,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Profiler extends ProfilerSystem {
 
+    private long lastUpdate = System.nanoTime();
     private final Map<WaveSystemBase, RollingAverage> rollingAverageMap = new ConcurrentHashMap<>();
     private final Set<WaveSystemBase> waveSystemSet = Collections.synchronizedSet(new HashSet<>());
 
@@ -47,6 +49,12 @@ public class Profiler extends ProfilerSystem {
     }
 
     public void render(WaveCanvas waveCanvas) {
+        boolean log = false;
+        if (System.nanoTime() - lastUpdate < 1_000_000_000) {
+            log = true;
+        }
+
+
         synchronized (waveSystemSet) {
             int y = 10;
             int textSize = 15;
@@ -54,6 +62,7 @@ public class Profiler extends ProfilerSystem {
                 TextGraphicalObject tgo = new TextGraphicalObject("UPS " + waveSystem.getName() + ":" + String.format("%.2f", rollingAverageMap.get(waveSystem).getAverage()), textSize, Color.GREEN);
                 waveCanvas.renderDebug(tgo, new Parameters(10, y));
                 y += textSize + 5;
+                Logger.getLogger().log("UPS for " + waveSystem.getName() + " is " + rollingAverageMap.get(waveSystem).getAverage());
             }
         }
     }

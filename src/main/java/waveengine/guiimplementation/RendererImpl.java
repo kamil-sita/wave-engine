@@ -4,37 +4,33 @@ import waveengine.core.WaveEngineRunning;
 import waveengine.guiimplementation.graphicalobject.*;
 import waveengine.guiimplementation.renderingparameters.Parameters;
 
-import static org.lwjgl.opengl.GL11.*;
-
 public final class RendererImpl implements Renderer {
     private final WaveEngineRunning waveEngineRunning;
+    private final float[] boundsArray = new float[4];
 
     public RendererImpl(WaveEngineRunning waveEngineRunning) {
         this.waveEngineRunning = waveEngineRunning;
     }
 
-    public void render(GraphicalObject graphicalObject, Parameters parameters) {
-
-        glColor3f(1.0f, 0.5f, 0.5f);
-        glBegin(GL_QUADS);
-        {
-            float sp = 0.5f;
-            glVertex3f(-sp, -sp, 0.0f);
-            glVertex3f(sp, -sp, 0.0f);
-            glVertex3f(sp, sp, 0.0f);
-            glVertex3f(-sp, sp, 0.0f);
+    public void render(GraphicalObject graphicalObject, Parameters parameters, int windowWidth, int windowHeight) {
+        if (waveEngineRunning.getWaveEngineParameters().strictMode()) {
+            if (graphicalObject == null) {
+                throw new RuntimeException("Graphical object cannot be null");
+            }
+            if (parameters == null) {
+                throw new RuntimeException("Parameters cannot be null");
+            }
         }
-        glEnd();
-        //renderSquare(3, 4);
-        //todo
+
 
         if (!parameters.isVisible()) return;
 
-        return;
-    }
+        int projectWidth = waveEngineRunning.getWaveEngineParameters().projectWidth();
+        int projectHeight = waveEngineRunning.getWaveEngineParameters().projectHeight();
 
-    @Override
-    public void renderSquare(int x, int y) {
+        parameters.getPositioning().getBounds(boundsArray, parameters.getX(), parameters.getY(), graphicalObject.getWidth() * parameters.getScale(), graphicalObject.getHeight() * parameters.getScale(), projectWidth, projectHeight);
+
+        graphicalObject.render(parameters, boundsArray);
     }
 
 }

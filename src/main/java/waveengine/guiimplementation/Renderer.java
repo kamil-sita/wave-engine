@@ -5,6 +5,5 @@ import waveengine.guiimplementation.renderingparameters.Parameters;
 
 
 public interface Renderer {
-    void render(GraphicalObject graphicalObject, Parameters parameters);
-    void renderSquare(int x, int y);
+    void render(GraphicalObject graphicalObject, Parameters parameters, int width, int height);
 }

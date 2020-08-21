@@ -3,14 +3,10 @@ package waveengine.library.systems;
 import waveengine.core.Logger;
 import waveengine.core.WaveEngine;
 import waveengine.ecs.system.ProfilerSystem;
-import waveengine.ecs.system.WaveSystem;
 import waveengine.ecs.system.WaveSystemBase;
 import waveengine.guiimplementation.WaveCanvas;
-import waveengine.guiimplementation.graphicalobject.TextGraphicalObject;
-import waveengine.guiimplementation.renderingparameters.Parameters;
 import waveengine.util.RollingAverage;
 
-import java.awt.*;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -59,8 +55,9 @@ public class Profiler extends ProfilerSystem {
             int y = 10;
             int textSize = 15;
             for (WaveSystemBase waveSystem : waveSystemSet) {
-                TextGraphicalObject tgo = new TextGraphicalObject("UPS " + waveSystem.getName() + ":" + String.format("%.2f", rollingAverageMap.get(waveSystem).getAverage()), textSize, Color.GREEN);
-                waveCanvas.renderDebug(tgo, new Parameters(10, y));
+                //todo
+                //TextGraphicalObject tgo = new TextGraphicalObject("UPS " + waveSystem.getName() + ":" + String.format("%.2f", rollingAverageMap.get(waveSystem).getAverage()), textSize, Color.GREEN);
+                //waveCanvas.renderDebug(tgo, new Parameters(10, y));
                 y += textSize + 5;
                 Logger.getLogger().log("UPS for " + waveSystem.getName() + " is " + rollingAverageMap.get(waveSystem).getAverage());
             }

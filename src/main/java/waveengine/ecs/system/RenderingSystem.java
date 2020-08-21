@@ -11,7 +11,7 @@ public abstract class RenderingSystem extends WaveSystemBase {
     public void update(WaveCanvas canvas, double deltaTime) throws Exception {
 
     };
-    public final void updateAndRelease(WaveCanvasImpl canvas, double deltaTime) {
+    public final void updateAndRelease(WaveCanvasImpl canvas, double deltaTime, int width, int height) {
         try {
             if (getWaveEngineRunning().getProfiler() != null) {
                 getWaveEngineRunning().getProfiler().reportUps(1/deltaTime, this);
@@ -20,7 +20,7 @@ public abstract class RenderingSystem extends WaveSystemBase {
             if (getWaveEngineRunning().getProfiler() != null) {
                 getWaveEngineRunning().getProfiler().render(canvas);
             }
-            canvas.renderQueue();
+            canvas.renderQueue(width, height);
         } catch (Exception e) {
             Logger.getLogger().logError(e.getMessage());
             e.printStackTrace();

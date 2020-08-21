@@ -8,9 +8,11 @@ import waveengine.ecs.entity.Entity;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.WaveCanvas;
+import waveengine.guiimplementation.graphicalobject.RectangleGraphicalObject;
 import waveengine.library.systems.GraphicalResourceManager;
 import waveengine.library.systems.Profiler;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +39,8 @@ public class Example {
 
                 tables.getTable(ComponentGraphics.class).iterate(
                         (index, graphObj) -> {
-                            var res = graphicalResourceManager.getResource(Resource.TEST_RESOURCE);
+                            //var res = graphicalResourceManager.getResource(Resource.TEST_RESOURCE); todo
+                            var res = new RectangleGraphicalObject(Color.GREEN, Color.YELLOW, 20, 20);
 
                             var parameters = graphObj.getParameters();
                             var position = positionTable.get(index);

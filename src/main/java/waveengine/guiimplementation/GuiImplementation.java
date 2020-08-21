@@ -58,7 +58,11 @@ public final class GuiImplementation {
         glClearColor(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f, c.getAlpha() / 255.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        waveEngineRunning.getRenderingSystem().updateAndRelease(waveCanvas, delta);
+        int[] width = new int[1];
+        int[] height = new int[1];
+        glfwGetWindowSize(lwjglWindow.getHandle(), width, height);
+
+        waveEngineRunning.getRenderingSystem().updateAndRelease(waveCanvas, delta, width[0], height[0]);
 
         glfwSwapBuffers(lwjglWindow.getHandle());
         glfwPollEvents();
@@ -100,7 +104,7 @@ public final class GuiImplementation {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
             // Create the window
-            window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
+            window = glfwCreateWindow(waveEngineRunning.getWaveEngineParameters().projectWidth(), waveEngineRunning.getWaveEngineParameters().projectHeight(), "Hello World!", NULL, NULL);
             if ( window == NULL )
                 throw new RuntimeException("Failed to create the GLFW window");
 

@@ -42,7 +42,7 @@ public final class WaveEngineParameters {
      * are eliminated.
      */
     public boolean strictMode() {
-        return true;
+        return false;
     }
 
     public Renderer getRenderer(WaveEngineRunning waveEngineRunning) {

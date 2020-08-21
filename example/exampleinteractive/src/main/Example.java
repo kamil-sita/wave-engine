@@ -3,6 +3,7 @@ package main;
 import main.discriminators.Stages;
 import main.discriminators.Tables;
 import main.tables.PhysicalAttributes;
+import org.w3c.dom.css.Rect;
 import waveengine.WaveEngineParameters;
 import waveengine.core.UpdatePolicy;
 import waveengine.core.WaveEngine;
@@ -10,7 +11,7 @@ import waveengine.core.WaveEngineSystemEvents;
 import waveengine.ecs.system.RenderingSystem;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.renderingparameters.Parameters;
-import waveengine.guiimplementation.graphicalobject.ShadedRectangleGraphicalObject;
+import waveengine.guiimplementation.graphicalobject.RectangleGraphicalObject;
 import waveengine.guiimplementation.WaveCanvas;
 import waveengine.library.WaveTables;
 import waveengine.library.objects.Clickable;
@@ -31,7 +32,8 @@ public class Example {
                 graphicalResourceManager.addResource(Stages.MAIN_STAGE, Resource.TEST_RESOURCE);
                 tables.getTable(Tables.GRAPHICS, GraphicalObject.class).iterate(
                         (index, graphObj) -> {
-                            var res = graphicalResourceManager.getResource(Resource.TEST_RESOURCE);
+                            //var res = graphicalResourceManager.getResource(Resource.TEST_RESOURCE); todo
+                            var res = new RectangleGraphicalObject(Color.GREEN, Color.YELLOW, 50, 50);
 
                             var parameters = graphObj.getParameters();
                             var position = positionTable.get(index);
@@ -42,7 +44,7 @@ public class Example {
                             canvas.render(res, parameters);
                         });
                 Parameters parameters = new Parameters(400, 200);
-                canvas.render(new ShadedRectangleGraphicalObject(Color.GREEN, Color.BLACK, 150, 150), parameters);
+                canvas.render(new RectangleGraphicalObject(Color.GREEN, Color.BLACK, 150, 150), parameters);
             }
         };
         var wave = WaveEngine.newInstance(new WaveEngineParameters(), renderingSystem);

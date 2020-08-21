@@ -9,7 +9,7 @@ public class Parameters {
     private boolean isVisible = true;
     private boolean disableCache = false;
     private int modCount = 0;
-    private Positioning positioning = Positioning.ABSOLUTE;
+    private Positioning positioning = Positioning.RELATIVE;
 
     public int getModCount() {
         return modCount;

@@ -4,7 +4,6 @@ import waveengine.core.WaveEngineRunning;
 import waveengine.guiimplementation.graphicalobject.GraphicalObject;
 import waveengine.guiimplementation.renderingparameters.Parameters;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +16,7 @@ public final class WaveCanvasImpl implements WaveCanvas {
     private final WaveEngineRunning waveEngineRunning;
     private final Renderer renderer;
     private final int layerCount; //layer count without debug layer
+    private int renderedObjects = 0;
 
     WaveCanvasImpl(WaveEngineRunning waveEngineRunning, Renderer renderer) {
         this.renderer = renderer;
@@ -46,6 +46,7 @@ public final class WaveCanvasImpl implements WaveCanvas {
         if (isStrict) {
             modCount[layer].add(parameters.getModCount());
         }
+        renderedObjects++;
     }
 
     @Override
@@ -53,7 +54,11 @@ public final class WaveCanvasImpl implements WaveCanvas {
         return layerCount;
     }
 
-    public void renderQueue() {
+    public void renderQueue(int width, int height) {
+        if (renderedObjects == 0) {
+            return;
+        }
+
         for (int i = 0; i < renderQueueGraphicalObject.length; i++) {
             for (int j = 0; j < renderQueueGraphicalObject[i].size(); j++) {
                 if (isStrict) {
@@ -68,7 +73,9 @@ public final class WaveCanvasImpl implements WaveCanvas {
                 }
                 renderer.render(
                         renderQueueGraphicalObject[i].get(j),
-                        renderQueueParameters[i].get(j)
+                        renderQueueParameters[i].get(j),
+                        width,
+                        height
                 );
             }
             renderQueueGraphicalObject[i].clear();
@@ -77,6 +84,8 @@ public final class WaveCanvasImpl implements WaveCanvas {
                 modCount[i].clear();
             }
         }
+
+        renderedObjects = 0;
     }
 
 }

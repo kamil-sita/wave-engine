@@ -7,7 +7,6 @@ import waveengine.core.WaveEngineSystemEvents;
 import waveengine.core.UpdatePolicy;
 import waveengine.ecs.system.WaveSystem;
 import waveengine.guiimplementation.graphicalobject.GraphicalObject;
-import waveengine.guiimplementation.graphicalobject.ImageGraphicalObject;
 import waveengine.util.Pair;
 
 import java.util.ArrayList;
@@ -68,17 +67,18 @@ public class GraphicalResourceManager extends WaveSystem {
 
         for (ResourceLocation resourceLocation : resourcesToLoad) {
             if (!loadedObjects.containsKey(resourceLocation)) {
-                loadedObjects.put(resourceLocation, ImageGraphicalObject.load(resourceLocation));
+               // loadedObjects.put(resourceLocation, ImageGraphicalObject.load(resourceLocation)); todo
             }
         }
 
     }
 
     private void loadResource(ResourceLocation location) {
-        loadedObjects.put(location, ImageGraphicalObject.load(location));
+       // loadedObjects.put(location, ImageGraphicalObject.load(location)); todo
     }
 
     public GraphicalObject getResource(ResourceLocation location) {
+        //todo null check
         return loadedObjects.get(location);
     }
 
